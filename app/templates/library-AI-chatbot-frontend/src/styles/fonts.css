@@ -1,0 +1,17 @@
+/* Minimal fonts.css placeholder to satisfy imports and provide a sensible default */
+
+@font-face {
+    font-family: 'InterVarLocal';
+    src: local('Inter'), local('Inter var');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root {
+    --font-sans: 'InterVarLocal', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+
+body {
+    font-family: var(--font-sans);
+}

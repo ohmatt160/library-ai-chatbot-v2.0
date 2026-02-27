@@ -1,0 +1,236 @@
+[
+  {
+    "timestamp": 1770391515.2007172,
+    "datetime": "2026-02-06 15:25:15",
+    "user_id": "anon_76f2a3bd-53de-4ef7-b45c-91a2b44d4e7f",
+    "session_id": "76f2a3bd-53de-4ef7-b45c-91a2b44d4e7f",
+    "user_message": "I want to find books about Python",
+    "bot_response": "I couldn't find any books matching '{query}'. Try using different keywords or check the spelling.",
+    "intent": "book_search",
+    "confidence": 0.8,
+    "processing_method": "nlp_based",
+    "context": {
+      "history": [],
+      "state": "ConversationState.GREETING",
+      "entities": {},
+      "user_preferences": {}
+    }
+  },
+  {
+    "timestamp": 1770391515.2497609,
+    "datetime": "2026-02-06 15:25:15",
+    "user_id": "anon_222dce08-6746-4898-84b5-b6609cd7897a",
+    "session_id": "222dce08-6746-4898-84b5-b6609cd7897a",
+    "user_message": "How do I contact the circulation desk?",
+    "bot_response": "\ud83d\udcde **CONTACT INFORMATION**\n\n\u2022 **Circulation Desk**\n  \ud83d\udcde (123) 456-7890\n  \ud83d\udce7 circulation@babcock.edu.ng\n  \ud83d\udd50 Hours: 8 AM - 10 PM\n\u2022 **Research Help**\n  \ud83d\udcde (123) 456-7891\n  \ud83d\udce7 research@babcock.edu.ng\n  \ud83d\udd50 Hours: 9 AM - 5 PM",
+    "intent": "contact_info",
+    "confidence": 0.9,
+    "processing_method": "nlp_based",
+    "context": {
+      "history": [],
+      "state": "ConversationState.GREETING",
+      "entities": {},
+      "user_preferences": {}
+    }
+  },
+  {
+    "timestamp": 1770391582.9773548,
+    "datetime": "2026-02-06 15:26:22",
+    "user_id": "anon_f4bb2e2e-5f30-4195-b798-32b39d4d83e4",
+    "session_id": "f4bb2e2e-5f30-4195-b798-32b39d4d83e4",
+    "user_message": "I want to find books about Python",
+    "bot_response": "I found 1 book(s) matching your search:\n\n\u2022 **Python Programming** by John Smith\n  \ud83d\udccd Location: Shelf 4A, Computer Science\n  \ud83d\udcc5 Available: 3 copies\n\nWould you like more details about any of these books?",
+    "intent": "book_search",
+    "confidence": 0.8,
+    "processing_method": "nlp_based",
+    "context": {
+      "history": [],
+      "state": "ConversationState.GREETING",
+      "entities": {},
+      "user_preferences": {}
+    }
+  },
+  {
+    "timestamp": 1770588854.1746674,
+    "datetime": "2026-02-08 23:14:14",
+    "user_id": "anon_de1d1eec-229b-4c56-af16-225ccdec74fa",
+    "session_id": "de1d1eec-229b-4c56-af16-225ccdec74fa",
+    "user_message": "What are the library hours?",
+    "bot_response": "\ud83d\udcda **Library Hours**\n\n**Weekdays (Mon-Fri):** 8:00 AM - 10:00 PM\n**Weekends (Sat-Sun):** 10:00 AM - 8:00 PM\n\n**Special Hours:**\n\u2022 Exam Period: 7:00 AM - 12:00 AM\n\u2022 Holidays: Closed\n\nCurrent time: 2026-02-08 23:14:14\n\nWould you like to know about specific services or holiday schedules?",
+    "intent": "library_hours",
+    "confidence": 0.95,
+    "processing_method": "nlp_based",
+    "context": {
+      "history": [],
+      "state": "ConversationState.GREETING",
+      "entities": {},
+      "user_preferences": {}
+    }
+  },
+  {
+    "timestamp": 1770588961.2525063,
+    "datetime": "2026-02-08 23:16:01",
+    "user_id": "anon_de1d1eec-229b-4c56-af16-225ccdec74fa",
+    "session_id": "de1d1eec-229b-4c56-af16-225ccdec74fa",
+    "user_message": "hi",
+    "bot_response": "Good evening! \ud83d\udcda **Hello! I'm the Babcock University Library Assistant.**\n\nI can help you with:\n\u2022 \ud83d\udcda Finding books and resources\n\u2022 \ud83d\udcda Library hours and policies\n\u2022 \ud83d\udcda Research and database access\n\u2022 \ud83d\udcda Citation and reference help\n\u2022 \ud83d\udcda\u00ac General library information\n\n**How can I assist you today?**\n\nTry asking me something like:\n\"What are the library hours?\"\n\"How do I borrow a book?\"\n\"Find books about computer science\"",
+    "intent": "greeting",
+    "confidence": 0.9,
+    "processing_method": "nlp_based",
+    "context": {
+      "history": [],
+      "state": "greeting",
+      "entities": {},
+      "user_preferences": {},
+      "last_intent": "library_hours",
+      "last_entities": [],
+      "conversation_history": [
+        "What are the library hours?"
+      ]
+    }
+  },
+  {
+    "timestamp": 1770891923.682751,
+    "datetime": "2026-02-12 11:25:23",
+    "user_id": "anon_957c6d13-628e-4902-9ed5-c616e611c4a3",
+    "session_id": "957c6d13-628e-4902-9ed5-c616e611c4a3",
+    "user_message": "hi",
+    "bot_response": "Good morning! \ud83d\udcda **Hello! I'm the Babcock University Library Assistant.**\n\nI can help you with:\n\u2022 \ud83d\udcda Finding books and resources\n\u2022 \ud83d\udcda Library hours and policies\n\u2022 \ud83d\udcda Research and database access\n\u2022 \ud83d\udcda Citation and reference help\n\u2022 \ud83d\udcda\u00ac General library information\n\n**How can I assist you today?**\n\nTry asking me something like:\n\"What are the library hours?\"\n\"How do I borrow a book?\"\n\"Find books about computer science\"",
+    "intent": "greeting",
+    "confidence": 0.9,
+    "processing_method": "nlp_based",
+    "context": {
+      "history": [],
+      "state": "ConversationState.GREETING",
+      "entities": {},
+      "user_preferences": {}
+    }
+  },
+  {
+    "timestamp": 1770892082.1302114,
+    "datetime": "2026-02-12 11:28:02",
+    "user_id": "anon_957c6d13-628e-4902-9ed5-c616e611c4a3",
+    "session_id": "957c6d13-628e-4902-9ed5-c616e611c4a3",
+    "user_message": "hi",
+    "bot_response": "Good morning! \ud83d\udcda **Hello! I'm the Babcock University Library Assistant.**\n\nI can help you with:\n\u2022 \ud83d\udcda Finding books and resources\n\u2022 \ud83d\udcda Library hours and policies\n\u2022 \ud83d\udcda Research and database access\n\u2022 \ud83d\udcda Citation and reference help\n\u2022 \ud83d\udcda\u00ac General library information\n\n**How can I assist you today?**\n\nTry asking me something like:\n\"What are the library hours?\"\n\"How do I borrow a book?\"\n\"Find books about computer science\"",
+    "intent": "greeting",
+    "confidence": 0.9,
+    "processing_method": "nlp_based",
+    "context": {
+      "history": [],
+      "state": "greeting",
+      "entities": {},
+      "user_preferences": {},
+      "last_intent": "greeting",
+      "last_entities": [],
+      "conversation_history": [
+        "hi"
+      ]
+    }
+  },
+  {
+    "timestamp": 1770892085.3227105,
+    "datetime": "2026-02-12 11:28:05",
+    "user_id": "anon_957c6d13-628e-4902-9ed5-c616e611c4a3",
+    "session_id": "957c6d13-628e-4902-9ed5-c616e611c4a3",
+    "user_message": "hi",
+    "bot_response": "Good morning! \ud83d\udcda **Hello! I'm the Babcock University Library Assistant.**\n\nI can help you with:\n\u2022 \ud83d\udcda Finding books and resources\n\u2022 \ud83d\udcda Library hours and policies\n\u2022 \ud83d\udcda Research and database access\n\u2022 \ud83d\udcda Citation and reference help\n\u2022 \ud83d\udcda\u00ac General library information\n\n**How can I assist you today?**\n\nTry asking me something like:\n\"What are the library hours?\"\n\"How do I borrow a book?\"\n\"Find books about computer science\"",
+    "intent": "greeting",
+    "confidence": 0.9,
+    "processing_method": "nlp_based",
+    "context": {
+      "history": [],
+      "state": "greeting",
+      "entities": {},
+      "user_preferences": {},
+      "last_intent": "greeting",
+      "last_entities": [],
+      "conversation_history": [
+        "hi"
+      ]
+    }
+  },
+  {
+    "timestamp": 1770892210.2685814,
+    "datetime": "2026-02-12 11:30:10",
+    "user_id": "anon_957c6d13-628e-4902-9ed5-c616e611c4a3",
+    "session_id": "957c6d13-628e-4902-9ed5-c616e611c4a3",
+    "user_message": "hi",
+    "bot_response": "Good morning! \n\ud83d\udcda **Hello! I'm the Babcock University Library Assistant.**\n\nI can help you with:\n\u2022 \ud83d\udcda Finding books and resources\n\u2022 \ud83d\udcda Library hours and policies\n\u2022 \ud83d\udcda Research and database access\n\u2022 \ud83d\udcda Citation and reference help\n\u2022 \ud83d\udcda\u00ac General library information\n\n**How can I assist you today?**\n\nTry asking me something like:\n\"What are the library hours?\"\n\"How do I borrow a book?\"\n\"Find books about computer science\"",
+    "intent": "greeting",
+    "confidence": 0.9,
+    "processing_method": "nlp_based",
+    "context": {
+      "history": [],
+      "state": "greeting",
+      "entities": {},
+      "user_preferences": {},
+      "last_intent": "greeting",
+      "last_entities": [],
+      "conversation_history": [
+        "hi"
+      ]
+    }
+  },
+  {
+    "timestamp": 1770892328.358723,
+    "datetime": "2026-02-12 11:32:08",
+    "user_id": "anon_957c6d13-628e-4902-9ed5-c616e611c4a3",
+    "session_id": "957c6d13-628e-4902-9ed5-c616e611c4a3",
+    "user_message": "hi",
+    "bot_response": "Good morning! \ud83d\udcda I'm the Babcock University Library Assistant.**\n\nI can help you with:\n\u2022 \ud83d\udcda Finding books and resources\n\u2022 \ud83d\udcda Library hours and policies\n\u2022 \ud83d\udcda Research and database access\n\u2022 \ud83d\udcda Citation and reference help\n\u2022 \ud83d\udcda\u00ac General library information\n\n**How can I assist you today?**\n\nTry asking me something like:\n\"What are the library hours?\"\n\"How do I borrow a book?\"\n\"Find books about computer science\"",
+    "intent": "greeting",
+    "confidence": 0.9,
+    "processing_method": "nlp_based",
+    "context": {
+      "history": [],
+      "state": "greeting",
+      "entities": {},
+      "user_preferences": {},
+      "last_intent": "greeting",
+      "last_entities": [],
+      "conversation_history": [
+        "hi"
+      ]
+    }
+  },
+  {
+    "timestamp": 1772071808.8782563,
+    "datetime": "2026-02-26 03:10:08",
+    "user_id": "1df11ab4-9ac0-4291-b08f-be8384c64883",
+    "session_id": "37331950-5945-466e-bb38-035782131c3f",
+    "user_message": "hi",
+    "bot_response": "Good morning! \ud83d\udcda I'm the Babcock University Library Assistant.**\n\nI can help you with:\n\u2022 \ud83d\udcda Finding books and resources\n\u2022 \ud83d\udcda Library hours and policies\n\u2022 \ud83d\udcda Research and database access\n\u2022 \ud83d\udcda Citation and reference help\n\u2022 \ud83d\udcda\u00ac General library information\n\n**How can I assist you today?**\n\nTry asking me something like:\n\"What are the library hours?\"\n\"How do I borrow a book?\"\n\"Find books about computer science\"",
+    "intent": "greeting",
+    "confidence": 0.9,
+    "processing_method": "nlp_based",
+    "context": {
+      "history": [],
+      "state": "ConversationState.GREETING",
+      "entities": {},
+      "user_preferences": {}
+    }
+  },
+  {
+    "timestamp": 1772072346.4788518,
+    "datetime": "2026-02-26 03:19:06",
+    "user_id": "1df11ab4-9ac0-4291-b08f-be8384c64883",
+    "session_id": "37331950-5945-466e-bb38-035782131c3f",
+    "user_message": "hi",
+    "bot_response": "Good morning! \ud83d\udcda I'm the Babcock University Library Assistant.**\n\nI can help you with:\n\u2022 \ud83d\udcda Finding books and resources\n\u2022 \ud83d\udcda Library hours and policies\n\u2022 \ud83d\udcda Research and database access\n\u2022 \ud83d\udcda Citation and reference help\n\u2022 \ud83d\udcda\u00ac General library information\n\n**How can I assist you today?**\n\nTry asking me something like:\n\"What are the library hours?\"\n\"How do I borrow a book?\"\n\"Find books about computer science\"",
+    "intent": "greeting",
+    "confidence": 0.9,
+    "processing_method": "nlp_based",
+    "context": {
+      "history": [],
+      "state": "greeting",
+      "entities": {},
+      "user_preferences": {},
+      "last_intent": "greeting",
+      "last_entities": [],
+      "conversation_history": [
+        "hi"
+      ]
+    }
+  }
+]
