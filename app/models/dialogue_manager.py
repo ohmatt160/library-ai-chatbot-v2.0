@@ -988,7 +988,7 @@ class DialogueManager:
             reservation = ReserveRequest(
                 user_id=user_id,
                 book_id=None,
-                status='pending',
+                status='active',
                 expiry_date=datetime.utcnow() + timedelta(days=7),
                 notes=f"Reserved via chatbot (external): {title} by {author}"
             )

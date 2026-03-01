@@ -12,8 +12,9 @@ const statusConfig = {
 };
 
 const reservationStatusConfig = {
-  active: { label: 'Active', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-  fulfilled: { label: 'Ready for Pickup', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+  pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  active: { label: 'Active', color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
+  fulfilled: { label: 'Ready for Pickup', color: 'bg-green-100 text-green-800', icon: Pickaxe },
   cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800', icon: XCircle },
   expired: { label: 'Expired', color: 'bg-gray-100 text-gray-800', icon: Calendar },
   pending_ill: { label: 'ILL Request', color: 'bg-purple-100 text-purple-800', icon: BookOpen },
@@ -246,15 +247,18 @@ export function MyBorrowRequestsPage() {
                 const StatusIcon = status.icon;
 
                 // Parse OpenLibrary book info from notes if available
+                // Get book info from book object (works for both local and external via schema)
                 let bookTitle = reservation.book?.title || `Book #${reservation.book_id}`;
                 let bookAuthor = reservation.book?.author || 'N/A';
-                if (reservation.notes && !reservation.book) {
-                  try {
-                    const notesData = JSON.parse(reservation.notes);
-                    bookTitle = notesData.title || bookTitle;
-                    bookAuthor = notesData.author || bookAuthor;
-                  } catch (e) {
-                    // Use default values
+                // Fallback: parse from notes if book data not available (legacy format)
+                if (!reservation.book && reservation.notes && reservation.notes.includes('external):')) {
+                  const content = reservation.notes.split('external):')[1]?.trim() || '';
+                  if (content.includes(' by ')) {
+                    const parts = content.split(' by ');
+                    bookTitle = parts[0].trim();
+                    bookAuthor = parts[1].trim();
+                  } else {
+                    bookTitle = content;
                   }
                 }
 
@@ -300,7 +304,7 @@ export function MyBorrowRequestsPage() {
                         </div>
                       </div>
                       
-                      {reservation.status === 'active' || reservation.status === 'pending_ill' ? (
+                      {reservation.status === 'pending' || reservation.status === 'active' || reservation.status === 'pending_ill' ? (
                         <button
                           onClick={() => {
                             if (confirm('Are you sure you want to cancel this reservation?')) {

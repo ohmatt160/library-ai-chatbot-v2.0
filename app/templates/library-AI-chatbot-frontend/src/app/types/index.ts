@@ -276,7 +276,7 @@ export interface ReserveRequest {
     first_name: string;
     last_name: string;
   };
-  status: 'active' | 'fulfilled' | 'cancelled' | 'expired';
+  status: 'pending' | 'active' | 'fulfilled' | 'cancelled' | 'expired' | 'pending_ill';
   reserve_date: string;
   expiry_date: string;
   fulfilled_date?: string;

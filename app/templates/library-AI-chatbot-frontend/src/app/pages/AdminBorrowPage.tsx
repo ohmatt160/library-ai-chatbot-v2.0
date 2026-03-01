@@ -24,7 +24,8 @@ const statusConfig = {
 };
 
 const reservationStatusConfig = {
-  active: { label: 'Active', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  active: { label: 'Active', color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
   fulfilled: { label: 'Ready', color: 'bg-green-100 text-green-800', icon: CheckCircle },
   cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800', icon: XCircle },
   expired: { label: 'Expired', color: 'bg-gray-100 text-gray-800', icon: Calendar },
@@ -526,7 +527,7 @@ export function AdminBorrowPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            {(reservation.status === 'active' || reservation.status === 'pending_ill') && (
+                            {(reservation.status === 'pending' || reservation.status === 'active' || reservation.status === 'pending_ill') && (
                               <>
                                 <Button
                                   size="sm"
