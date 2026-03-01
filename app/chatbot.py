@@ -5,11 +5,35 @@ from app.models.response_generator import ResponseGenerator
 from app.utils.metrics import MetricsTracker
 from app.api.opac_client import create_opac_client
 
-# Initialize components lazily or as singletons
-rule_engine = AdvancedRuleEngine('app/data/rules.json')
-nlp_engine = HybridNLPEngine()
-response_generator = ResponseGenerator('app/data/response_templates.json')
-metrics_tracker = MetricsTracker()
+# Initialize components lazily
+rule_engine = None
+nlp_engine = None
+response_generator = None
+metrics_tracker = None
+
+def get_rule_engine():
+    global rule_engine
+    if rule_engine is None:
+        rule_engine = AdvancedRuleEngine('app/data/rules.json')
+    return rule_engine
+
+def get_nlp_engine():
+    global nlp_engine
+    if nlp_engine is None:
+        nlp_engine = HybridNLPEngine()
+    return nlp_engine
+
+def get_response_generator():
+    global response_generator
+    if response_generator is None:
+        response_generator = ResponseGenerator('app/data/response_templates.json')
+    return response_generator
+
+def get_metrics_tracker():
+    global metrics_tracker
+    if metrics_tracker is None:
+        metrics_tracker = MetricsTracker()
+    return metrics_tracker
 
 # OPAC client - will be initialized lazily
 opac_client = None
@@ -56,5 +80,11 @@ def reset_opac_client():
 def get_opac():
     return get_opac_client()
 
-# Create dialogue manager
-dialogue_manager = DialogueManager(rule_engine, nlp_engine, response_generator)
+# Create dialogue manager lazily
+dialogue_manager = None
+
+def get_dialogue_manager():
+    global dialogue_manager
+    if dialogue_manager is None:
+        dialogue_manager = DialogueManager(get_rule_engine(), get_nlp_engine(), get_response_generator())
+    return dialogue_manager
