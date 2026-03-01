@@ -45,8 +45,13 @@ def create_tables():
             db.session.commit()
             print("✅ Admin user created: admin / admin123")
 
-if __name__ == '__main__':
+# Create tables on module import (for gunicorn production)
+try:
     create_tables()
+except Exception as e:
+    logging.warning(f"Could not create tables on startup: {e}")
+
+if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
 
     print("""
