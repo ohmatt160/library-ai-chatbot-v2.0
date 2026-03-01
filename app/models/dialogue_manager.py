@@ -964,6 +964,7 @@ class DialogueManager:
         """Create a reservation for a book"""
         from app.model import ReserveRequest, Book
         from app.extensions import db
+        from datetime import datetime, timedelta
         
         try:
             book_id = book_info.get('id')
@@ -974,6 +975,7 @@ class DialogueManager:
                         user_id=user_id,
                         book_id=book_id,
                         status='active',
+                        expiry_date=datetime.utcnow() + timedelta(days=7),
                         notes=f"Reserved via chatbot: {book.title}"
                     )
                     db.session.add(reservation)
@@ -982,11 +984,13 @@ class DialogueManager:
             
             # For OpenLibrary books without book_id
             title = book_info.get('title', 'Unknown')
+            author = book_info.get('author', 'Unknown Author')
             reservation = ReserveRequest(
                 user_id=user_id,
                 book_id=None,
                 status='pending',
-                notes=f"Reserved via chatbot (external): {title}"
+                expiry_date=datetime.utcnow() + timedelta(days=7),
+                notes=f"Reserved via chatbot (external): {title} by {author}"
             )
             db.session.add(reservation)
             db.session.commit()

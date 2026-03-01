@@ -949,8 +949,8 @@ def cancel_reservation(reservation_id):
         if reservation.user_id != user_id and user.user_type != 'Admin':
             return jsonify({'error': 'Access denied'}), 403
         
-        if reservation.status not in ('active', 'pending_ill'):
-            return jsonify({'error': 'Only active or pending ILL reservations can be cancelled'}), 400
+        if reservation.status not in ('active', 'pending', 'pending_ill'):
+            return jsonify({'error': 'Only active or pending reservations can be cancelled'}), 400
         
         reservation.status = 'cancelled'
         reservation.cancelled_date = datetime.utcnow()
@@ -1024,8 +1024,8 @@ def fulfill_reservation(reservation_id):
         if not reservation:
             return jsonify({'error': 'Reservation not found'}), 404
         
-        if reservation.status not in ('active', 'pending_ill'):
-            return jsonify({'error': 'Only active or pending ILL reservations can be fulfilled'}), 400
+        if reservation.status not in ('active', 'pending', 'pending_ill'):
+            return jsonify({'error': 'Only active or pending reservations can be fulfilled'}), 400
         
         # Get book title (works for both local and OpenLibrary reservations)
         if reservation.book:
@@ -1090,11 +1090,27 @@ def admin_cancel_reservation(reservation_id):
         
         db.session.commit()
         
+        # Get book title (works for both local and external books)
+        if reservation.book:
+            book_title = reservation.book.title
+        elif reservation.notes and "external):" in reservation.notes:
+            # Parse title from notes for external books
+            try:
+                content = reservation.notes.split("external):", 1)[1].strip()
+                if " by " in content:
+                    book_title = content.rsplit(" by ", 1)[0].strip()
+                else:
+                    book_title = content
+            except:
+                book_title = 'Unknown Book'
+        else:
+            book_title = 'Unknown Book'
+        
         # Notify user
         create_notification(
             reservation.user_id,
             'Reservation Cancelled ❌',
-            f'Your reservation for "{reservation.book.title}" has been cancelled. Reason: {reason}',
+            f'Your reservation for "{book_title}" has been cancelled. Reason: {reason}',
             'reservation_cancelled'
         )
         
@@ -1124,8 +1140,8 @@ def expire_reservation(reservation_id):
         if not reservation:
             return jsonify({'error': 'Reservation not found'}), 404
         
-        if reservation.status != 'active':
-            return jsonify({'error': 'Only active reservations can be expired'}), 400
+        if reservation.status not in ('active', 'pending'):
+            return jsonify({'error': 'Only active or pending reservations can be expired'}), 400
         
         # Update reservation
         reservation.status = 'expired'

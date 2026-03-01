@@ -330,7 +330,44 @@ class ReserveRequestSchema(ma.SQLAlchemySchema):
     expiry_date = ma.auto_field()
     notes = ma.auto_field()
     user = ma.Nested(UserSchema, only=['id', 'username', 'first_name', 'last_name'])
-    book = ma.Nested(BookSchema)
+    # Use Method field to provide virtual book data for external reservations
+    book = ma.Method("get_book_data")
+    
+    def get_book_data(self, obj):
+        """Get book data from relationship or create virtual book for external reservations"""
+        if obj.book:
+            # Return actual book data
+            return {
+                'id': obj.book.id,
+                'title': obj.book.title,
+                'author': obj.book.author,
+                'isbn': obj.book.isbn,
+                'source': 'local'
+            }
+        
+        # For external books, parse from notes and return virtual book object
+        # Format: "Reserved via chatbot (external): Title by Author" or "Reserved via chatbot (external): Title"
+        title = "Unknown Title"
+        author = "External Book"
+        
+        if obj.notes:
+            if "external):" in obj.notes:
+                content = obj.notes.split("external):", 1)[1].strip()
+                # Check if author is included
+                if " by " in content:
+                    parts = content.rsplit(" by ", 1)
+                    title = parts[0].strip()
+                    author = parts[1].strip()
+                else:
+                    title = content
+        
+        return {
+            'id': None,
+            'title': title,
+            'author': author,
+            'isbn': None,
+            'source': 'external'
+        }
 
 
 # Initialize schemas
