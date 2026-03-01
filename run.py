@@ -52,7 +52,7 @@ except Exception as e:
     logging.warning(f"Could not create tables on startup: {e}")
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 10000))
 
     print("""
     📚 Library Chatbot API with Flask-RESTful
