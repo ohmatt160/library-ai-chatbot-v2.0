@@ -45,7 +45,8 @@ export function AdminBooks() {
       toast.success('Book added successfully');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to add book');
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Failed to add book';
+      toast.error(errorMsg);
     },
   });
 
@@ -101,6 +102,15 @@ export function AdminBooks() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Submitting book form:', bookForm);
+    if (!bookForm.title || !bookForm.author) {
+      toast.error('Title and author are required');
+      return;
+    }
+    if (bookForm.copies_available < 1) {
+      toast.error('Copies available must be at least 1');
+      return;
+    }
     if (editingBook) {
       updateMutation.mutate({ id: editingBook.id, data: bookForm });
     } else {
@@ -177,13 +187,11 @@ export function AdminBooks() {
               </div>
             </DialogContent>
           </Dialog>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => { resetForm(); setEditingBook(null); }}>
+          <Button onClick={() => { resetForm(); setEditingBook(null); setIsAddDialogOpen(true); }}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Book
               </Button>
-            </DialogTrigger>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{editingBook ? 'Edit Book' : 'Add New Book'}</DialogTitle>

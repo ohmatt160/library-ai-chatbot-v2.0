@@ -126,6 +126,79 @@ class Contact(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+class BorrowRequest(db.Model):
+    """Store book borrowing requests"""
+    __tablename__ = 'borrow_requests'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    book_id = db.Column(db.Integer, db.ForeignKey('books.id'), nullable=False)
+    request_date = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.Enum('pending', 'approved', 'denied', 'picked_up', 'returned'), default='pending')
+    admin_notes = db.Column(db.Text)
+    processed_by = db.Column(db.String(36), db.ForeignKey('users.id'))
+    processed_date = db.Column(db.DateTime)
+    pickup_deadline = db.Column(db.DateTime)
+    return_date = db.Column(db.DateTime)
+
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref='borrow_requests')
+    book = db.relationship('Book', backref='borrow_requests')
+    processed_by_user = db.relationship('User', foreign_keys=[processed_by])
+    history = db.relationship('BorrowHistory', backref='request', lazy=True, cascade='all, delete-orphan')
+
+
+class BorrowHistory(db.Model):
+    """Track history of borrow request actions"""
+    __tablename__ = 'borrow_history'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    request_id = db.Column(db.Integer, db.ForeignKey('borrow_requests.id'), nullable=False)
+    action = db.Column(db.String(50), nullable=False)  # created, approved, denied, picked_up, returned
+    action_by = db.Column(db.String(36), db.ForeignKey('users.id'))
+    action_date = db.Column(db.DateTime, default=datetime.utcnow)
+    notes = db.Column(db.Text)
+
+    # Relationships
+    user = db.relationship('User', foreign_keys=[action_by])
+
+
+class Notification(db.Model):
+    """Store user notifications"""
+    __tablename__ = 'notifications'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    notification_type = db.Column(db.Enum('borrow_request', 'borrow_approved', 'borrow_denied', 'pickup_reminder', 'general'), default='general')
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    user = db.relationship('User', backref='notifications')
+
+
+class ReserveRequest(db.Model):
+    """Store book reservation requests"""
+    __tablename__ = 'reserve_requests'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    book_id = db.Column(db.Integer, db.ForeignKey('books.id'), nullable=True)  # Nullable for OpenLibrary books
+    reserve_date = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(50), default='active')  # Using String instead of Enum for flexibility
+    notify_when_available = db.Column(db.Boolean, default=True)
+    fulfilled_date = db.Column(db.DateTime)
+    cancelled_date = db.Column(db.DateTime)
+    expiry_date = db.Column(db.DateTime)
+    notes = db.Column(db.Text)  # For storing OpenLibrary book info
+
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref='reserve_requests')
+    book = db.relationship('Book', backref='reserve_requests')
+
+
 # ====================== MARSHMALLOW SCHEMAS ======================
 
 class UserSchema(ma.SQLAlchemySchema):
@@ -196,6 +269,70 @@ class ContactSchema(ma.SQLAlchemySchema):
     created_at = ma.auto_field()
 
 
+class BorrowRequestSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = BorrowRequest
+
+    id = ma.auto_field()
+    user_id = ma.auto_field()
+    book_id = ma.auto_field()
+    request_date = ma.auto_field()
+    status = ma.auto_field()
+    admin_notes = ma.auto_field()
+    processed_by = ma.auto_field()
+    processed_date = ma.auto_field()
+    pickup_deadline = ma.auto_field()
+    return_date = ma.auto_field()
+    # Include nested relationships
+    user = ma.Nested(UserSchema, only=['id', 'username', 'first_name', 'last_name'])
+    book = ma.Nested(BookSchema)
+    processed_by_user = ma.Nested(UserSchema, only=['id', 'username'])
+
+
+class BorrowHistorySchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = BorrowHistory
+
+    id = ma.auto_field()
+    request_id = ma.auto_field()
+    action = ma.auto_field()
+    action_by = ma.auto_field()
+    action_date = ma.auto_field()
+    notes = ma.auto_field()
+    user = ma.Nested(UserSchema, only=['id', 'username'])
+
+
+class NotificationSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = Notification
+
+    id = ma.auto_field()
+    user_id = ma.auto_field()
+    title = ma.auto_field()
+    message = ma.auto_field()
+    notification_type = ma.auto_field()
+    is_read = ma.auto_field()
+    created_at = ma.auto_field()
+
+
+class ReserveRequestSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = ReserveRequest
+
+    id = ma.auto_field()
+    user_id = ma.auto_field()
+    book_id = ma.auto_field()
+    reserve_date = ma.auto_field()
+    status = ma.auto_field()
+    notify_when_available = ma.auto_field()
+    fulfilled_date = ma.auto_field()
+    cancelled_date = ma.auto_field()
+    expiry_date = ma.auto_field()
+    notes = ma.auto_field()
+    user = ma.Nested(UserSchema, only=['id', 'username', 'first_name', 'last_name'])
+    book = ma.Nested(BookSchema)
+
+
 # Initialize schemas
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
@@ -207,6 +344,14 @@ book_schema = BookSchema()
 books_schema = BookSchema(many=True)
 contact_schema = ContactSchema()
 contacts_schema = ContactSchema(many=True)
+borrow_request_schema = BorrowRequestSchema()
+borrow_requests_schema = BorrowRequestSchema(many=True)
+borrow_history_schema = BorrowHistorySchema()
+borrow_histories_schema = BorrowHistorySchema(many=True)
+notification_schema = NotificationSchema()
+notifications_schema = NotificationSchema(many=True)
+reserve_request_schema = ReserveRequestSchema()
+reserve_requests_schema = ReserveRequestSchema(many=True)
 
 # ====================== REQUEST PARSERS ======================
 

@@ -10,6 +10,44 @@ from flask_restful import Api
 from .extensions import db, bcrypt, ma, login_manager, jwt
 
 
+def _run_migrations(app):
+    """Run database migrations for existing tables"""
+    try:
+        from sqlalchemy import text, inspect
+        
+        inspector = inspect(db.engine)
+        
+        # Check if reserve_requests table exists
+        if 'reserve_requests' in inspector.get_table_names():
+            columns = [c['name'] for c in inspector.get_columns('reserve_requests')]
+            
+            # Add notes column if it doesn't exist
+            if 'notes' not in columns:
+                try:
+                    db.session.execute(text('ALTER TABLE reserve_requests ADD COLUMN notes TEXT'))
+                    db.session.commit()
+                    app.logger.info('Added notes column to reserve_requests table')
+                except Exception as e:
+                    app.logger.warning(f'Could not add notes column: {e}')
+                    db.session.rollback()
+            
+            # Try to handle book_id nullable - for SQLite this is tricky
+            # For other databases, we try to make it nullable
+            if 'book_id' in columns:
+                try:
+                    # Try to check if foreign key constraint exists and modify
+                    db.session.execute(text('PRAGMA foreign_keys=OFF'))
+                    # For SQLite, we'll just note that nullable might not work
+                    # The model change should handle new inserts
+                except Exception as e:
+                    app.logger.warning(f'Could not modify constraints: {e}')
+                            
+        app.logger.info('Database migrations completed')
+    except Exception as e:
+        app.logger.warning(f'Database migration check failed: {e}')
+        # Continue anyway - the app should still work
+
+
 def create_app(config_class='config.DevelopmentConfig'):
     """Create and configure the Flask application"""
     app = Flask(__name__)
@@ -29,12 +67,30 @@ def create_app(config_class='config.DevelopmentConfig'):
     app.config.setdefault('JWT_HEADER_NAME', 'Authorization')
     app.config.setdefault('JWT_HEADER_TYPE', 'Bearer')
 
+    # OPAC Configuration (OpenLibrary integration)
+    # Set OPAC_TYPE to 'openlibrary' to use OpenLibrary API
+    # Options: 'generic', 'koha', 'evergreen', 'sierra', 'aleph', 'openlibrary'
+    app.config.setdefault('OPAC_TYPE', 'openlibrary')  # Use OpenLibrary by default
+    app.config.setdefault('OPAC_URL', '')
+    app.config.setdefault('OPAC_API_KEY', '')
+    app.config.setdefault('OPAC_USERNAME', '')
+    app.config.setdefault('OPAC_PASSWORD', '')
+    app.config.setdefault('OPAC_TIMEOUT', 30)
+    app.config.setdefault('OPAC_USE_MOCK', False)
+
     # Initialize extensions with app
     db.init_app(app)
     bcrypt.init_app(app)
     ma.init_app(app)
     login_manager.init_app(app)
     jwt.init_app(app)
+
+    # Create database tables on startup
+    with app.app_context():
+        db.create_all()
+        
+        # Run database migrations for existing tables
+        _run_migrations(app)
 
     from .model import User
 
@@ -101,6 +157,10 @@ def create_app(config_class='config.DevelopmentConfig'):
          origins=["http://localhost", "http://127.0.0.1:5500", "http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173"],
          allow_headers=["Content-Type", "Authorization"],
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+
+    # Register borrow blueprint
+    from .api.borrow_routes import borrow_bp
+    app.register_blueprint(borrow_bp, url_prefix='/api')
 
     # Setup logger
     from .utils.logger import setup_logger

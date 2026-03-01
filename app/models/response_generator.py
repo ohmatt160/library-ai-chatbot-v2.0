@@ -140,17 +140,65 @@ class ResponseGenerator:
             if db_results:
                 book_strings = []
                 for b in db_results:
-                    book_strings.append(f"• **{b['title']}** by {b['author']}\n  📍 Location: {b['location']}\n  📅 Available: {b['copies_available']} copies")
+                    # Check if this is an OpenLibrary result (has source field)
+                    source = b.get('source', 'local')
+                    
+                    if source == 'openlibrary':
+                        # OpenLibrary result - different format
+                        location_info = "🌐 Available via OpenLibrary"
+                        if b.get('preview_url'):
+                            location_info = f"🔗 [Preview Book]({b['preview_url']})"
+                        elif b.get('openlibrary_key'):
+                            location_info = f"🔗 [View on OpenLibrary](https://openlibrary.org{b['openlibrary_key']})"
+                        
+                        book_strings.append(f"• **{b['title']}** by {b.get('author', 'Unknown Author')}\n  {location_info}")
+                    else:
+                        # Local database result - use original format
+                        location = b.get('location', 'N/A')
+                        copies = b.get('copies_available', 0)
+                        book_strings.append(f"• **{b['title']}** by {b['author']}\n  📍 Location: {location}\n  📅 Available: {copies} copies")
+                
+                # Check if we have results from external sources
+                has_opac = any(b.get('source') == 'openlibrary' for b in db_results)
+                prefix = ""
+                if has_opac:
+                    prefix = "🌐 **Results from OpenLibrary (external catalog):**\n\n"
+                
                 try:
-                    return template_obj['main'].format(count=len(db_results), book_list="\n".join(book_strings))
+                    return prefix + template_obj['main'].format(count=len(db_results), book_list="\n".join(book_strings))
                 except KeyError:
-                    return f"📚 **BOOKS FOUND ({len(db_results)})**\n\n" + "\n".join(book_strings)
+                    return prefix + f"📚 **BOOKS FOUND ({len(db_results)})**\n\n" + "\n".join(book_strings)
             else:
-                query = nlp_data.get('text', 'your query')
+                query = nlp_data.get('text', '')
+                corrected = nlp_data.get('corrected_query')
+                
+                # If we corrected a typo, mention it
+                if corrected and corrected != query.lower().strip():
+                    query = corrected
+                    correction_msg = f"(I assumed you meant '{corrected}')\n\n"
+                else:
+                    correction_msg = ""
+                
+                # Check if query is asking "how to" - provide helpful instructions
+                query_lower = query.lower() if query else ""
+                how_to_patterns = ["how do", "how can", "how to", "search for books how", "search method"]
+                if any(pattern in query_lower for pattern in how_to_patterns):
+                    return "Here's how to search for books in our library:\n\n1. **Online Catalog**: Go to the library website and use the search bar. You can search by title, author, ISBN, or topic.\n\n2. **Keywords**: Use specific keywords like 'computer science' or 'business management' for better results.\n\n3. **Location**: Note the call number and shelf location shown in the catalog.\n\n4. **Availability**: Check if the book is available or if it's already borrowed.\n\n5. **Digital Access**: Many e-books are available online - look for the 'View Online' button.\n\nWould you like me to help you search for a specific topic?"
+                
+                # Check for confirmation responses (yes, yeah, sure, etc.)
+                yes_patterns = ["yes", "yeah", "sure", "ok", "okay", "yep", "please", "definitely"]
+                if query_lower.strip() in yes_patterns:
+                    return "Great! What topic or subject are you interested in? For example:\n- Computer Science\n- Business Management\n- History\n- Medicine\n\nJust tell me what you're looking for and I'll help you search!"
+                
+                # Check for e-book related questions
+                ebook_patterns = ["e-book", "ebook", "digital book", "online book", "electronic book"]
+                if any(pattern in query_lower for pattern in ebook_patterns):
+                    return "Yes, you can search for e-books in our library!\n\n**Here's how:**\n\n1. **Library Website**: Go to our online catalog and use the search bar.\n\n2. **Filter**: Look for 'Available Online' or 'eBook' filter options.\n\n3. **Databases**: Access e-books through our databases like:\n   - JSTOR\n   - ScienceDirect\n   - SpringerLink\n   - IEEE Xplore\n\n4. **E-book Platforms**: We also provide access to:\n   - ProQuest eBook Central\n   - Taylor & Francis eBooks\n\n5. **Access**: Log in with your student ID and password to access from anywhere.\n\nWould you like me to help you find e-books on a specific topic?"
+                
                 try:
-                    return template_obj['no_results'].format(query=query)
+                    return correction_msg + template_obj['no_results'].format(query=query)
                 except KeyError:
-                    return "❌ That book isn't in our catalog. Would you like to:\n1. Try different search terms?\n2. Request an inter-library loan?\n3. Check eBook alternatives?"
+                    return correction_msg + "That book isn't in our catalog. Would you like to:\n1. Try different search terms?\n2. Request an inter-library loan?\n3. Check eBook alternatives?"
 
         if intent == 'contact_info':
             if db_results:
@@ -158,6 +206,58 @@ class ResponseGenerator:
                 for c in db_results:
                     contact_strings.append(f"• **{c['department']}**\n  📞 {c['phone']}\n  📧 {c['email']}\n  🕐 Hours: {c['hours']}")
                 return template_obj['main'].format(contact_list="\n".join(contact_strings))
+
+        # Handle my_borrows and my_reservations intents
+        if intent == 'my_borrows':
+            return "To check your current borrow status, please log into your account and visit the 'My Borrow Requests' page. There you can see all your current borrows, due dates, and renewal options.\n\nWould you like me to help you with anything else?"
+
+        if intent == 'my_reservations':
+            return "To check your reservations, please visit the 'My Borrow Requests' page in your account. You can see active reservations, items ready for pickup, and expiry dates.\n\nWould you like me to help you with anything else?"
+
+        # Check if an action was already taken (borrow/reserve)
+        action_taken = nlp_data.get('action_taken')
+        action_result = nlp_data.get('action_result')
+        
+        if action_taken and action_result:
+            # Return the result of the action (success or failure message)
+            return action_result.get('message', 'Action completed.')
+        
+        if intent == 'borrow_request':
+            if db_results:
+                book_strings = []
+                for b in db_results:
+                    status = "Available" if b.get('copies_available', 0) > 0 else "Not Available"
+                    book_strings.append(f"• **{b['title']}** by {b['author']}\n  📍 Location: {b['location']}\n  📅 Status: {status}")
+                if len(book_strings) > 0:
+                    return f"I found the following book(s). To borrow, please use the 'My Borrow Requests' page or I can help you submit a request.\n\n" + "\n".join(book_strings) + "\n\nWould you like me to help you borrow one of these books?"
+            return template_obj.get('main', "I'd be happy to help you borrow a book! To process your request, I'll need some information. Could you please provide the title or ISBN of the book you'd like to borrow?")
+
+        if intent == 'book_reservation':
+            query = nlp_data.get('text', '')
+            if db_results:
+                book_strings = []
+                for b in db_results:
+                    # Check if this is an OpenLibrary result
+                    source = b.get('source', 'local')
+                    
+                    if source == 'openlibrary':
+                        # OpenLibrary result
+                        location_info = "🌐 Available via OpenLibrary"
+                        if b.get('preview_url'):
+                            location_info = f"🔗 [Preview Book]({b['preview_url']})"
+                        elif b.get('openlibrary_key'):
+                            location_info = f"🔗 [View on OpenLibrary](https://openlibrary.org{b['openlibrary_key']})"
+                        
+                        book_strings.append(f"• **{b['title']}** by {b.get('author', 'Unknown Author')}\n  {location_info}")
+                    else:
+                        # Local database result
+                        status = "Available" if b.get('copies_available', 0) > 0 else "Not Available"
+                        book_strings.append(f"• **{b['title']}** by {b['author']}\n  📍 Location: {b.get('location', 'N/A')}\n  📅 Status: {status}")
+                
+                if len(book_strings) > 0:
+                    return f"I found the following book(s) that you can reserve. Would you like me to help you reserve one of these?\n\n" + "\n".join(book_strings) + "\n\nJust tell me which book you'd like to reserve!"
+            # No results found
+            return f"I couldn't find a book matching '{query}'. Would you like to try a different search?"
 
         template = template_obj.get('main', "I can help you with that.")
         entities = nlp_data.get('entities', [])

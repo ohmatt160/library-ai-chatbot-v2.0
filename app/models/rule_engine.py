@@ -32,6 +32,21 @@ class AdvancedRuleEngine:
 
         self.compiled_patterns = self._compile_patterns()
 
+    def _create_default_rules(self) -> List[Dict]:
+        """Create default rules when file is not found"""
+        return [
+            {
+                'id': 'default_001',
+                'pattern': '(?i)(hello|hi|hey)',
+                'response': 'Hello! How can I help you today?',
+                'priority': 1,
+                'requires_context': False,
+                'conditions': []
+            }
+        ]
+
+        self.compiled_patterns = self._compile_patterns()
+
     # def _compile_patterns(self) -> List[Dict]:
     #     """Compile regex patterns for efficient matching"""
     #     compiled = []

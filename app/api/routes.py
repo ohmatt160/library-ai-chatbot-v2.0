@@ -11,6 +11,7 @@ from app.models.nlp_engine import HybridNLPEngine
 from app.models.response_generator import ResponseGenerator
 from app.utils.database import db
 from app.utils.metrics import MetricsTracker
+from app.chatbot import get_opac_client
 import time
 import uuid
 
@@ -117,7 +118,7 @@ def start_session():
 @api_bp.route('/search/books', methods=['GET'])
 @jwt_required()
 def search_books():
-    """Search library catalog"""
+    """Search library catalog using OpenLibrary and local database"""
     try:
         query = request.args.get('q', '')
         author = request.args.get('author', '')
@@ -130,23 +131,70 @@ def search_books():
         # Use NLP to understand search intent
         nlp_result = nlp_engine.analyze(query if query else f"{author} {subject}")
 
-        # Search database
+        # Search using OpenLibrary API (live data)
+        from app.chatbot import get_opac_client
+        opac_client = get_opac_client()
+        opac_results = opac_client.search(query, author, subject, limit=limit)
+        
+        # Also search local database
         from app.utils.database import search_catalog
-        results = search_catalog(
-            query=query,
-            author=author,
-            subject=subject,
-            limit=limit
-        )
+        local_results = search_catalog(query=query, author=author, subject=subject, limit=limit)
+        
+        # Mark the source of each result
+        for result in opac_results:
+            result['source'] = 'openlibrary'
+        for result in local_results:
+            result['source'] = 'local'
+        
+        # Combine results - local first, then OpenLibrary (to prioritize available books)
+        results = local_results + opac_results
 
         return jsonify({
             'query': query,
             'intent': nlp_result.get('intent'),
             'count': len(results),
-            'results': results,
+            'results': results[:limit],
+            'source': 'openlibrary+local',
             'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')
         })
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/books/isbn/<isbn>', methods=['GET'])
+@jwt_required()
+def get_book_by_isbn(isbn):
+    """
+    Get detailed book information by ISBN using OpenLibrary API
+    
+    Args:
+        isbn: ISBN-10 or ISBN-13 code
+    """
+    try:
+        # Get OPAC client (OpenLibrary by default)
+        opac_client = get_opac_client()
+        
+        # Try to get book details by ISBN
+        if hasattr(opac_client, 'get_book_by_isbn'):
+            book = opac_client.get_book_by_isbn(isbn)
+        else:
+            # Fallback to search
+            book = opac_client.search(isbn=isbn, limit=1)
+            book = book[0] if book else None
+        
+        if not book:
+            return jsonify({
+                'error': 'Book not found',
+                'isbn': isbn
+            }), 404
+        
+        return jsonify({
+            'status': 'success',
+            'book': book,
+            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')
+        }), 200
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

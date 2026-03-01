@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router';
-import { MessageSquare, Search, ShieldCheck, Home } from 'lucide-react';
+import { MessageSquare, Search, ShieldCheck, Home, BookOpen, ClipboardList } from 'lucide-react';
 import { useAuthStore } from '../../store/auth';
 import { useEffect } from 'react';
 import {
@@ -35,6 +35,11 @@ export function AppSidebar() {
       url: '/search',
       icon: Search,
     },
+    {
+      title: 'My Borrow Requests',
+      url: '/my-borrows',
+      icon: BookOpen,
+    },
   ];
 
   const isAdmin = user?.user_type === 'Admin' || user?.user_type === 'admin';
@@ -43,6 +48,11 @@ export function AppSidebar() {
       title: 'Admin Dashboard',
       url: '/admin',
       icon: ShieldCheck,
+    },
+    {
+      title: 'Manage Borrows',
+      url: '/admin/borrows',
+      icon: ClipboardList,
     },
   ] : [];
 

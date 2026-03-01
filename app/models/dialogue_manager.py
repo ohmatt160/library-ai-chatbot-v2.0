@@ -22,17 +22,12 @@ class DialogueManager:
             self.redis_client = redis.Redis(host='localhost', port=6379, db=0)
             self.redis_client.ping()
         except Exception:
-            print("⚠️ Redis not available, using in-memory context storage")
-
+            print("Redis not available, using in-memory context storage")
             class MockRedis:
                 def __init__(self): self.data = {}
-
                 def get(self, key): return self.data.get(key)
-
                 def setex(self, key, time, value): self.data[key] = value
-
                 def set(self, key, value): self.data[key] = value
-
             self.redis_client = MockRedis()
         self.conversation_contexts = {}
 
@@ -48,6 +43,128 @@ class DialogueManager:
         # Get or create conversation context
         context_key = f"conv:{user_id}:{session_id}"
         context = self._get_context(context_key)
+
+        # Check for borrow/reserve keywords BEFORE NLP processing
+        # This handles cases like "borrow bimbo" where NLP might return unknown intent
+        import re
+        message_lower = message.lower().strip()
+        borrow_patterns = [r'\bborrow\b', r'\bborrowing\b', r'\bloan\b', r'\bcheck\s*out\b']
+        reserve_patterns = [r'\breserve\b', r'\breservation\b', r'\bhold\b']
+        
+        is_borrow = any(re.search(p, message_lower) for p in borrow_patterns)
+        is_reserve = any(re.search(p, message_lower) for p in reserve_patterns)
+        
+        if is_borrow or is_reserve:
+            print(f"DEBUG: Detected borrow={is_borrow}, reserve={is_reserve} from keywords")
+            # Extract book name by removing borrow/reserve words
+            book_query = message_lower
+            for p in borrow_patterns + reserve_patterns:
+                book_query = re.sub(p, '', book_query)
+            book_query = book_query.strip()
+            
+            # If no book name, ask for it
+            if not book_query:
+                return {
+                    'response': f"Sure! Which book would you like to {'borrow' if is_borrow else 'reserve'}? Please provide the book title.",
+                    'intent': 'borrow_request' if is_borrow else 'book_reservation',
+                    'confidence': 0.95,
+                    'processing_method': 'keyword_fallback'
+                }
+            
+            # Search for the book
+            from app.api.opac_client import OpenLibraryClient
+            from app.model import Book
+            from app.extensions import db
+            
+            action_type = 'borrow' if is_borrow else 'reserve'
+            
+            # Search local database
+            local_books = Book.query.filter(
+                db.or_(
+                    Book.title.ilike(f'%{book_query}%'),
+                    Book.author.ilike(f'%{book_query}%'),
+                    Book.isbn.ilike(f'%{book_query}%')
+                )
+            ).limit(10).all()
+            
+            local_results = []
+            for book in local_books:
+                local_results.append({
+                    'id': book.id,
+                    'title': book.title,
+                    'author': book.author,
+                    'isbn': book.isbn or '',
+                    'source': 'local',
+                    'action_type': action_type
+                })
+            
+            # Search OpenLibrary
+            opac_results = []
+            try:
+                opac_client = OpenLibraryClient()
+                opac_books = opac_client.search(query=book_query, limit=5)
+                for book in opac_books:
+                    opac_results.append({
+                        'title': book.get('title', 'Unknown'),
+                        'author': book.get('author', 'Unknown'),
+                        'isbn': book.get('isbn', ''),
+                        'source': 'openlibrary',
+                        'action_type': action_type
+                    })
+            except Exception as e:
+                print(f"Error searching OpenLibrary: {e}")
+            
+            all_books = local_results + opac_results
+            
+            if not all_books:
+                return {
+                    'response': f"I couldn't find any book matching '{book_query}'. Would you like to try a different search term?",
+                    'intent': 'book_search',
+                    'confidence': 0.9,
+                    'processing_method': 'keyword_fallback'
+                }
+            
+            # Store books in context for later selection
+            context['last_books'] = all_books[:5]
+            context['last_query'] = book_query
+            context['action_type'] = action_type
+            context['user_id'] = user_id  # Store user_id for later selection
+            self._update_context(context_key, context)
+            
+            if len(all_books) == 1:
+                # Single book - process immediately
+                book = all_books[0]
+                if book['source'] == 'local':
+                    if is_borrow:
+                        result = self._create_borrow_request(user_id, book)
+                    else:
+                        result = self._create_reservation(user_id, book)
+                else:
+                    result = self._create_reservation(user_id, {
+                        'title': book['title'],
+                        'author': book['author'],
+                        'isbn': book.get('isbn', '')
+                    })
+                return {
+                    'response': result.get('message', 'Request processed!'),
+                    'intent': 'borrow_created' if is_borrow else 'reservation_created',
+                    'confidence': 0.95,
+                    'processing_method': 'keyword_fallback'
+                }
+            
+            # Multiple books - ask for clarification
+            book_list = []
+            for i, b in enumerate(all_books[:5], 1):
+                book_list.append(f"{i}. {b['title'][:40]} by {b['author'][:30]}")
+            
+            return {
+                'response': f"I found multiple books matching '{book_query}'. Which one would you like to {action_type}?\n\n" + "\n".join(book_list) + "\n\nPlease reply with the number (e.g., '1').",
+                'intent': 'book_search',
+                'confidence': 0.9,
+                'processing_method': 'clarification',
+                'db_results': all_books[:5]
+            }
+
 
         # Step 1: Intent and Entity Extraction
         nlp_result = self.nlp_engine.process(message)
@@ -77,41 +194,74 @@ class DialogueManager:
         # Now compare
         # Identity intents should always be answered, even with lower confidence
         identity_intents = ['introduction', 'about_you', 'bot_identity', 'bot_purpose', 'greeting', 'farewell']
-
+        
         if conf_value < 0.5 and intent not in identity_intents:
             print(f"DEBUG: Low confidence detected: {conf_value}")
             # Get context to check for confirmation responses
             context_key = f"conv:{user_id}:{session_id}"
             context = self._get_context(context_key)
-
+            
             # Handle low confidence with ALL required arguments
             return self._handle_low_confidence(
                 user_message=message,
                 confidence=conf_value,
-                context=context
+                context=context,
+                user_id=user_id
             )
 
         processing_method = nlp_result.get('processing_method', 'hybrid')
+
 
         # Step 2: Database Integration (Factual Querying)
         from app.utils.database import search_catalog, get_contact_info, get_user_account
 
         db_results = None
+        opac_results = []
+        corrected_query = None
+        
         if intent == 'book_search':
+            # First try local database
             db_results = search_catalog(query=message)
-            if not db_results and nlp_result.get('keywords'):
-                # Try searching with keywords if full query failed
-                for kw in nlp_result['keywords']:
-                    if len(kw) > 3:
-                        db_results = search_catalog(query=kw)
-                        if db_results: break
-
+            
+            # If no results, try fuzzy matching and OPAC
+            if not db_results:
+                # Check for common typos and get corrected query
+                corrected_query = self._check_typo_and_suggest(message)
+                
+                if corrected_query and corrected_query != message.lower().strip():
+                    # Try with corrected query
+                    db_results = search_catalog(query=corrected_query)
+                
+                # If still no results, search OPAC (OpenLibrary)
+                if not db_results:
+                    # Extract clean search term (remove 'find', 'search', etc. prefixes)
+                    import re
+                    original_query = corrected_query if corrected_query else message.lower().strip()
+                    search_term = re.sub(r'^(find|search|look for|get|show|\?)\s+', '', original_query)
+                    search_term = search_term.strip()
+                    
+                    print(f"DEBUG: Searching OPAC with term: '{search_term}'")
+                    try:
+                        from app.api.opac_client import OpenLibraryClient
+                        opac_client = OpenLibraryClient()
+                        opac_results = opac_client.search(query=search_term, limit=10)
+                        if opac_results:
+                            print(f"DEBUG: Found {len(opac_results)} results from OpenLibrary")
+                    except Exception as e:
+                        print(f"DEBUG: OPAC search failed: {e}")
+            
+            # Combine results
+            if opac_results:
+                db_results = db_results + opac_results if db_results else opac_results
+            
             nlp_result['db_results'] = db_results
+            nlp_result['opac_results'] = opac_results
+            nlp_result['corrected_query'] = corrected_query
         elif intent == 'contact_info':
             db_results = get_contact_info()
             nlp_result['db_results'] = db_results
         elif intent == 'book_availability':
-            db_results = search_catalog(query=message)  # Simplified
+            db_results = search_catalog(query=message) # Simplified
             nlp_result['db_results'] = db_results
 
         # Step 3: Determine processing path (Hybrid Decision)
@@ -142,7 +292,7 @@ class DialogueManager:
             else:
                 print("❌ No RAG match found, using clarification")
                 processing_method = "clarification"
-                response_data = self._handle_low_confidence(message, confidence, context)
+                response_data = self._handle_low_confidence(message, confidence, context, user_id)
 
         # Step 4: Determine state
         current_state = self._determine_state(user_id, session_id, intent, confidence, context)
@@ -186,35 +336,116 @@ class DialogueManager:
         context_data = self.redis_client.get(context_key)
         return json.loads(context_data) if context_data else {
             'history': [],
-            'state': ConversationState.GREETING,
+            'state': ConversationState.GREETING.value,
             'entities': {},
             'user_preferences': {}
         }
+
+    def _get_state_enum(self, context: Dict) -> ConversationState:
+        """Get ConversationState enum from context, defaulting to GREETING"""
+        state_value = context.get('state', 'greeting')
+        try:
+            return ConversationState(state_value)
+        except ValueError:
+            return ConversationState.GREETING
 
     def _update_context(self, context_key: str, updates: Dict):
         """Update conversation context"""
         current = self._get_context(context_key)
         current.update(updates)
+        
+        # Convert any Enum values to their string representations for JSON serialization
+        def convert_enums(obj):
+            if isinstance(obj, dict):
+                return {k: convert_enums(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_enums(item) for item in obj]
+            elif isinstance(obj, Enum):
+                return obj.value
+            return obj
+        
+        serializable_current = convert_enums(current)
         self.redis_client.setex(
             context_key,
             3600,  # 1 hour expiry
-            json.dumps(current)
+            json.dumps(serializable_current)
         )
 
-    def _handle_low_confidence(self, user_message: str, confidence, context: Dict = None) -> Dict:
+    def _handle_low_confidence(self, user_message: str, confidence, context: Dict = None, user_id: str = None) -> Dict:
         """
         Handle cases where intent confidence is low
         """
         if context is None: context = {}
 
-        # Check for confirmation responses (yes/yeah/sure) to continue previous context
+        # Check for book selection (numeric input like "1", "2", etc.)
         user_lower = user_message.lower().strip()
-        confirmation_words = ['yes', 'yeah', 'sure', 'yep', 'ok', 'okay', 'please']
+        
+        # Check if this is a number selection for a book
+        if user_lower.isdigit():
+            selection_num = int(user_lower)
+            last_books = context.get('last_books', [])
+            action_type = context.get('action_type', 'borrow')
+            last_query = context.get('last_query', '')
+            
+            if last_books and 1 <= selection_num <= len(last_books):
+                # Valid book selection
+                book = last_books[selection_num - 1]
+                from app.model import Book, User
+                from app.extensions import db
+                
+                # Use user_id from parameter
+                effective_user_id = user_id if user_id else context.get('user_id')
+                
+                if not effective_user_id:
+                    return {
+                        'response': 'Please log in to borrow or reserve books.',
+                        'action': 'login_required',
+                        'confidence': 0.95,
+                        'processing_method': 'auth_required',
+                        'requires_clarification': False
+                    }
+                
+                # Process the borrow/reserve request
+                if book.get('source') == 'local':
+                    # Book exists in local database
+                    if action_type == 'borrow':
+                        result = self._create_borrow_request(effective_user_id, book)
+                    else:
+                        result = self._create_reservation(effective_user_id, book)
+                else:
+                    # Book from OpenLibrary - create reservation
+                    result = self._create_reservation(effective_user_id, {
+                        'title': book.get('title', 'Unknown'),
+                        'author': book.get('author', 'Unknown'),
+                        'isbn': book.get('isbn', '')
+                    })
+                
+                return {
+                    'response': result.get('message', f'Your {action_type} request for "{book["title"]}" has been submitted!'),
+                    'action': 'book_selected',
+                    'confidence': 0.95,
+                    'processing_method': 'book_selection',
+                    'requires_clarification': False,
+                    'book_title': book.get('title', ''),
+                    'action_type': action_type
+                }
+            elif last_books:
+                # Invalid selection number
+                return {
+                    'response': f"Please enter a number between 1 and {len(last_books)}. Which book would you like to {action_type}?",
+                    'action': 'invalid_selection',
+                    'confidence': 0.9,
+                    'processing_method': 'book_selection_error',
+                    'requires_clarification': True
+                }
 
+        # Check for confirmation responses (yes/yeah/sure) to continue previous context
+        confirmation_words = ['yes', 'yeah', 'sure', 'yep', 'ok', 'okay', 'please']
+        
         if user_lower in confirmation_words:
             # Get previous intent from context
             last_intent = context.get('last_intent')
-
+            
             # If previous intent was research_assistance, continue with detailed help
             if last_intent == 'research_assistance':
                 return {
@@ -287,6 +518,82 @@ class DialogueManager:
             'suggested_follow_ups': follow_ups,
             'original_message': user_message
         }
+
+    def _check_typo_and_suggest(self, message: str) -> Optional[str]:
+        """
+        Check for common typos and suggest corrections
+        Returns corrected query or None if no correction needed
+        """
+        import re
+        
+        # Common programming language/library typos
+        common_typos = {
+            'pyton': 'python',
+            'phyton': 'python',
+            'pythn': 'python',
+            'pythno': 'python',
+            'javscript': 'javascript',
+            'javscript': 'javascript',
+            'javasript': 'javascript',
+            'rubby': 'ruby',
+            'rubi': 'ruby',
+            'c++': 'c plus plus',
+            'c#': 'c sharp',
+            'fsharp': 'f sharp',
+            'goLang': 'golang',
+            'bable': 'bible',
+            'bibble': 'bible',
+            'bible': 'bible',
+            'html': 'HTML',
+            'css': 'CSS',
+            'sql': 'SQL',
+            'api': 'API',
+        }
+        
+        # Clean and normalize the message
+        message_lower = message.lower().strip()
+        # Remove 'find ' prefix if present
+        query = re.sub(r'^(find|search|look for|get|show)\s+', '', message_lower)
+        query = query.strip()
+        
+        # Check for direct typos
+        for typo, correction in common_typos.items():
+            if typo in query:
+                corrected = query.replace(typo, correction)
+                print(f"DEBUG: Corrected typo '{typo}' to '{correction}'")
+                return corrected
+        
+        # Try using difflib for fuzzy matching if no direct typo found
+        try:
+            import difflib
+            words = query.split()
+            corrected_words = []
+            
+            for word in words:
+                # Only check words with 4+ characters
+                if len(word) >= 4:
+                    # Check against common programming terms
+                    common_terms = ['python', 'javascript', 'java', 'ruby', 'golang', 'rust', 
+                                   'typescript', 'php', 'swift', 'kotlin', 'csharp', 'cpp',
+                                   'bible', 'quran', 'torah', 'books', 'library', 'computer',
+                                   'science', 'history', 'math', 'physics', 'biology', 'chemistry']
+                    
+                    matches = difflib.get_close_matches(word, common_terms, n=1, cutoff=0.8)
+                    if matches:
+                        corrected_words.append(matches[0])
+                        print(f"DEBUG: Fuzzy corrected '{word}' to '{matches[0]}'")
+                    else:
+                        corrected_words.append(word)
+                else:
+                    corrected_words.append(word)
+            
+            corrected_query = ' '.join(corrected_words)
+            if corrected_query != query:
+                return corrected_query
+        except Exception as e:
+            print(f"DEBUG: Fuzzy matching error: {e}")
+        
+        return None
 
     # def _handle_low_confidence(self, user_message: str, confidence, context: Dict = None) -> Dict:
     #     """
@@ -619,3 +926,73 @@ class DialogueManager:
             suggestions = random.sample(suggestions, 4)
 
         return suggestions
+
+    def _create_borrow_request(self, user_id: str, book_info: Dict) -> Dict:
+        """Create a borrow request for a book"""
+        from app.model import BorrowRequest, Book
+        from app.extensions import db
+        
+        try:
+            book_id = book_info.get('id')
+            if book_id:
+                book = Book.query.get(book_id)
+                if book:
+                    existing = BorrowRequest.query.filter_by(
+                        user_id=user_id,
+                        book_id=book_id,
+                        status='active'
+                    ).first()
+                    if existing:
+                        return {'success': False, 'message': 'You already have this book borrowed.'}
+                    
+                    borrow = BorrowRequest(
+                        user_id=user_id,
+                        book_id=book_id,
+                        status='pending',
+                        admin_notes=f"Borrowed via chatbot: {book.title}"
+                    )
+                    db.session.add(borrow)
+                    db.session.commit()
+                    return {'success': True, 'message': f'Successfully submitted borrow request for "{book.title}"! You can check your borrow requests in your account.'}
+            
+            return {'success': False, 'message': 'Book not found in local catalog.'}
+        except Exception as e:
+            print(f"Error creating borrow request: {e}")
+            return {'success': False, 'message': 'Sorry, I encountered an error while submitting your borrow request. Please try again.'}
+
+    def _create_reservation(self, user_id: str, book_info: Dict) -> Dict:
+        """Create a reservation for a book"""
+        from app.model import ReserveRequest, Book
+        from app.extensions import db
+        
+        try:
+            book_id = book_info.get('id')
+            if book_id:
+                book = Book.query.get(book_id)
+                if book:
+                    reservation = ReserveRequest(
+                        user_id=user_id,
+                        book_id=book_id,
+                        status='active',
+                        notes=f"Reserved via chatbot: {book.title}"
+                    )
+                    db.session.add(reservation)
+                    db.session.commit()
+                    return {'success': True, 'message': f'Successfully reserved "{book.title}"! You can pick it up at the library. Check your reservations in your account.'}
+            
+            # For OpenLibrary books without book_id
+            title = book_info.get('title', 'Unknown')
+            reservation = ReserveRequest(
+                user_id=user_id,
+                book_id=None,
+                status='pending',
+                notes=f"Reserved via chatbot (external): {title}"
+            )
+            db.session.add(reservation)
+            db.session.commit()
+            return {'success': True, 'message': f'Successfully reserved "{title}"! Note: This is an external book. Please contact the library for pickup instructions.'}
+        except Exception as e:
+            print(f"Error creating reservation: {e}")
+            return {'success': False, 'message': 'Sorry, I encountered an error while submitting your reservation. Please try again.'}
+
+

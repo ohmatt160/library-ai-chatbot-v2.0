@@ -10,7 +10,7 @@
         "Library opening times",
         "Closing time"
       ],
-      "answer": "The library is open:\n\n**Regular Hours:**\nâ¢ Monday-Friday: 8:00 AM - 10:00 PM\nâ¢ Saturday-Sunday: 10:00 AM - 8:00 PM\n\n**Extended Hours (During Exams):**\nâ¢ Monday-Sunday: 7:00 AM - 12:00 AM\n\n**Holiday Schedule:**\nThe library is closed on official university holidays.",
+      "answer": "The library is open:\n\n**Regular Hours:**\n• Monday-Friday: 8:00 AM - 10:00 PM\n• Saturday-Sunday: 10:00 AM - 8:00 PM\n\n**Extended Hours (During Exams):**\n• Monday-Sunday: 7:00 AM - 12:00 AM\n\n**Holiday Schedule:**\nThe library is closed on official holidays.",
       "metadata": {
         "last_updated": "2024-01-15",
         "source": "Library Policy",
@@ -27,7 +27,7 @@
         "Borrowing limits",
         "Loan duration"
       ],
-      "answer": "**Borrowing Limits:**\n\n**For Students:**\nâ¢ Maximum books: 5\nâ¢ Loan period: 14 days\nâ¢ Renewals allowed: 1 time (if no holds)\n\n**For Staff:**\nâ¢ Maximum books: 10\nâ¢ Loan period: 30 days\nâ¢ Renewals allowed: 2 times\n\n**Overdue Items:**\nâ¢ Fine: â¦50 per day per book\nâ¢ Maximum fine: â¦1000 per book\nâ¢ Borrowing privileges suspended until fines paid",
+      "answer": "**Borrowing Limits:**\n\n**For Students:**\n• Maximum books: 5\n• Loan period: 14 days\n• Renewals allowed: 1 time (if no holds)\n\n**For Staff:**\n• Maximum books: 10\n• Loan period: 30 days\n• Renewals allowed: 2 times\n\n**Overdue Items:**\n• Fine: ₦50 per day per book\n• Maximum fine: ₦1000 per book\n• Borrowing privileges suspended until fines paid",
       "metadata": {
         "last_updated": "2024-01-15",
         "source": "Circulation Policy",
@@ -44,7 +44,7 @@
         "Study rooms",
         "Research help"
       ],
-      "answer": "**Library Services:**\n\n1. **Borrowing Services** - Books, journals, media\n2. **Research Assistance** - Librarian consultations\n3. **Printing & Copying** - B&W (â¦10/page), Color (â¦50/page)\n4. **WiFi Access** - 'Babcock-Library' network\n5. **Study Spaces** - Quiet zones, group study rooms\n6. **Computer Lab** - 50+ computers with internet\n7. **Database Access** - 50+ academic databases\n8. **Interlibrary Loan** - Request materials from other libraries\n9. **Reference Desk** - Research and citation help\n10. **Workshops** - Regular training sessions",
+      "answer": "**Library Services:**\n\n1. **Borrowing Services** - Books, journals, media\n2. **Research Assistance** - Librarian consultations\n3. **Printing & Copying** - B&W (₦10/page), Color (₦50/page)\n4. **WiFi Access** - 'Library-WiFi' network\n5. **Study Spaces** - Quiet zones, group study rooms\n6. **Computer Lab** - 50+ computers with internet\n7. **Database Access** - 50+ academic databases\n8. **Interlibrary Loan** - Request materials from other libraries\n9. **Reference Desk** - Research and citation help\n10. **Workshops** - Regular training sessions",
       "metadata": {
         "last_updated": "2024-01-15",
         "source": "Services Brochure",
@@ -61,7 +61,7 @@
         "Call numbers",
         "Book locations"
       ],
-      "answer": "**Finding Books in the Library:**\n\n1. **Search Online Catalog:**\n   â¢ Visit library website\n   â¢ Use search box\n   â¢ Filter by author, title, subject\n\n2. **Understand Call Numbers:**\n   â¢ Books organized by Library of Congress system\n   â¢ Example: QA76.73.P98 (Computer Science section)\n\n3. **Locate in Library:**\n   â¢ Ground Floor: Reference, New Arrivals\n   â¢ 1st Floor: Social Sciences, Humanities\n   â¢ 2nd Floor: Sciences, Engineering\n   â¢ 3rd Floor: Quiet Study, Special Collections\n\n4. **Get Help:**\n   â¢ Ask at circulation desk\n   â¢ Use library floor maps\n   â¢ Request librarian assistance",
+      "answer": "**Finding Books in the Library:**\n\n1. **Search Online Catalog:**\n   • Visit library website\n   • Use search box\n   • Filter by author, title, subject\n\n2. **Understand Call Numbers:**\n   • Books organized by Library of Congress system\n   • Example: QA76.73.P98 (Computer Science section)\n\n3. **Locate in Library:**\n   • Ground Floor: Reference, New Arrivals\n   • 1st Floor: Social Sciences, Humanities\n   • 2nd Floor: Sciences, Engineering\n   • 3rd Floor: Quiet Study, Special Collections\n\n4. **Get Help:**\n   • Ask at circulation desk\n   • Use library floor maps\n   • Request librarian assistance",
       "metadata": {
         "last_updated": "2024-01-15",
         "source": "Library Guide",
@@ -78,7 +78,7 @@
         "Remote access",
         "Electronic resources"
       ],
-      "answer": "**Digital Resources Available:**\n\n**Databases (On-campus):**\nâ¢ JSTOR - Arts & Sciences\nâ¢ IEEE Xplore - Engineering\nâ¢ ScienceDirect - Science\nâ¢ SpringerLink - Multidisciplinary\nâ¢ PubMed - Medicine\nâ¢ ACM Digital Library - Computing\nâ¢ ProQuest - Dissertations & Theses\n\n**E-Book Collections:**\nâ¢ EBSCO eBooks\nâ¢ Springer eBooks\nâ¢ O'Reilly Learning\n\n**Remote Access:**\nUse your Babcock University credentials to access all digital resources from anywhere.\n\n**Research Guides:**\nSubject-specific guides available on library website.",
+      "answer": "**Digital Resources Available:**\n\n**Databases (On-campus):**\n• JSTOR - Arts & Sciences\n• IEEE Xplore - Engineering\n• ScienceDirect - Science\n• SpringerLink - Multidisciplinary\n• PubMed - Medicine\n• ACM Digital Library - Computing\n• ProQuest - Dissertations & Theses\n\n**E-Book Collections:**\n• EBSCO eBooks\n• Springer eBooks\n• O'Reilly Learning\n\n**Remote Access:**\nUse your library credentials to access all digital resources from anywhere.\n\n**Research Guides:**\nSubject-specific guides available on library website.",
       "metadata": {
         "last_updated": "2024-01-15",
         "source": "Digital Resources",
@@ -95,7 +95,7 @@
         "Printing facilities",
         "Library layout"
       ],
-      "answer": "**Library Facilities:**\n\n**Ground Floor:**\nâ¢ Circulation Desk\nâ¢ Reference Collection\nâ¢ New Arrivals\nâ¢ Group Study Rooms (Bookable)\nâ¢ Computer Lab (50+ PCs)\nâ¢ Printing/Copying Station\n\n**First Floor:**\nâ¢ Social Sciences Collection\nâ¢ Humanities Collection\nâ¢ Quiet Study Area\nâ¢ Current Periodicals\n\n**Second Floor:**\nâ¢ Sciences Collection\nâ¢ Engineering Collection\nâ¢ Quiet Study Carrels\nâ¢ Thesis Collection\n\n**Third Floor:**\nâ¢ Special Collections\nâ¢ Archives\nâ¢ Silent Study Zone\nâ¢ Faculty Research Area\n\n**Other Facilities:**\nâ¢ WiFi throughout building\nâ¢ Drinking water stations\nâ¢ Restrooms on each floor\nâ¢ Elevator access\nâ¢ Wheelchair accessible",
+      "answer": "**Library Facilities:**\n\n**Ground Floor:**\n• Circulation Desk\n• Reference Collection\n• New Arrivals\n• Group Study Rooms (Bookable)\n• Computer Lab (50+ PCs)\n• Printing/Copying Station\n\n**First Floor:**\n• Social Sciences Collection\n• Humanities Collection\n• Quiet Study Area\n• Current Periodicals\n\n**Second Floor:**\n• Sciences Collection\n• Engineering Collection\n• Quiet Study Carrels\n• Thesis Collection\n\n**Third Floor:**\n• Special Collections\n• Archives\n• Silent Study Zone\n• Faculty Research Area\n\n**Other Facilities:**\n• WiFi throughout building\n• Drinking water stations\n• Restrooms on each floor\n• Elevator access\n• Wheelchair accessible",
       "metadata": {
         "last_updated": "2024-01-15",
         "source": "Facility Guide",
@@ -112,7 +112,7 @@
         "Visitor policy",
         "Library card"
       ],
-      "answer": "**Library Membership:**\n\n**Primary Users (Automatic Membership):**\nâ¢ All Babcock University students\nâ¢ All Babcock University staff\nâ¢ Use your university ID as library card\n\n**Secondary Users (With Conditions):**\nâ¢ Alumni: Free access with alumni card\nâ¢ Visiting scholars: Letter from department required\nâ¢ Consortium members: Reciprocal agreement\n\n**Guest Users:**\nâ¢ Limited access to physical collection\nâ¢ No borrowing privileges\nâ¢ Internet access: â¦500/day\n\n**All users must:**\nâ¢ Register at circulation desk\nâ¢ Follow library rules and regulations\nâ¢ Respect quiet study areas",
+      "answer": "**Library Membership:**\n\n**Primary Users (Automatic Membership):**\n• All registered students\n• All staff members\n• Use your ID as library card\n\n**Secondary Users (With Conditions):**\n• Alumni: Free access with alumni card\n• Visiting scholars: Letter from department required\n• Consortium members: Reciprocal agreement\n\n**Guest Users:**\n• Limited access to physical collection\n• No borrowing privileges\n• Internet access: ₦500/day\n\n**All users must:**\n• Register at circulation desk\n• Follow library rules and regulations\n• Respect quiet study areas",
       "metadata": {
         "last_updated": "2024-01-15",
         "source": "Membership Policy",
@@ -129,7 +129,7 @@
         "Citation help",
         "Research consultation"
       ],
-      "answer": "**Getting Research Help:**\n\n1. **Research Consultations:**\n   â¢ Book appointment with subject librarian\n   â¢ 30-60 minute sessions\n   â¢ Help with search strategies, databases, citations\n\n2. **Research Guides:**\n   â¢ Subject-specific guides on library website\n   â¢ Database recommendations\n   â¢ Citation style guides\n\n3. **Workshops:**\n   â¢ Database training sessions\n   â¢ Citation management (Zotero/Mendeley)\n   â¢ Research skills development\n\n4. **Online Help:**\n   â¢ Live chat with librarian\n   â¢ Email research questions\n   â¢ Video tutorials on website\n\n5. **Citation Help:**\n   â¢ Style guides at reference desk\n   â¢ Online citation generators\n   â¢ Individual consultation available",
+      "answer": "**Getting Research Help:**\n\n1. **Research Consultations:**\n   • Book appointment with subject librarian\n   • 30-60 minute sessions\n   • Help with search strategies, databases, citations\n\n2. **Research Guides:**\n   • Subject-specific guides on library website\n   • Database recommendations\n   • Citation style guides\n\n3. **Workshops:**\n   • Database training sessions\n   • Citation management (Zotero/Mendeley)\n   • Research skills development\n\n4. **Online Help:**\n   • Live chat with librarian\n   • Email research questions\n   • Video tutorials on website\n\n5. **Citation Help:**\n   • Style guides at reference desk\n   • Online citation generators\n   • Individual consultation available",
       "metadata": {
         "last_updated": "2024-01-15",
         "source": "Research Services",
@@ -146,7 +146,7 @@
         "Noise policy",
         "Cell phone use"
       ],
-      "answer": "**Library Rules & Conduct:**\n\n**General Conduct:**\nâ¢ Respect quiet study areas\nâ¢ Keep conversations at low volume\nâ¢ Use cell phones in designated areas only\nâ¢ No disruptive behavior\n\n**Food & Drink:**\nâ¢ Covered drinks allowed\nâ¢ Snacks allowed in cafeteria only\nâ¢ No hot meals in study areas\nâ¢ Clean up after yourself\n\n**Resource Use:**\nâ¢ Handle library materials carefully\nâ¢ Return books on time\nâ¢ Report damaged items\nâ¢ No marking in books\n\n**Computer Use:**\nâ¢ Academic purposes priority\nâ¢ No inappropriate websites\nâ¢ Save files to personal devices\nâ¢ Log out when finished\n\n**Violations may result in:**\nâ¢ Warning\nâ¢ Temporary suspension\nâ¢ Loss of privileges\nâ¢ Disciplinary action",
+      "answer": "**Library Rules & Conduct:**\n\n**General Conduct:**\n• Respect quiet study areas\n• Keep conversations at low volume\n• Use cell phones in designated areas only\n• No disruptive behavior\n\n**Food & Drink:**\n• Covered drinks allowed\n• Snacks allowed in cafeteria only\n• No hot meals in study areas\n• Clean up after yourself\n\n**Resource Use:**\n• Handle library materials carefully\n• Return books on time\n• Report damaged items\n• No marking in books\n\n**Computer Use:**\n• Academic purposes priority\n• No inappropriate websites\n• Save files to personal devices\n• Log out when finished\n\n**Violations may result in:**\n• Warning\n• Temporary suspension\n• Loss of privileges\n• Disciplinary action",
       "metadata": {
         "last_updated": "2024-01-15",
         "source": "Conduct Policy",
@@ -163,7 +163,7 @@
         "Staff directory",
         "Location address"
       ],
-      "answer": "**Contact the Library:**\n\n**Main Library:**\nð Address: Babcock University Library\n           Ilishan-Remo, Ogun State\n           Nigeria\nð Phone: +234 (0)123 456 7890\nð§ Email: library@babcock.edu.ng\nð Website: library.babcock.edu.ng\n\n**Department Contacts:**\nâ¢ Circulation Desk: Ext. 1001\nâ¢ Reference Desk: Ext. 1002\nâ¢ Technical Services: Ext. 1003\nâ¢ Digital Resources: Ext. 1004\nâ¢ Interlibrary Loan: Ext. 1005\n\n**Social Media:**\nâ¢ Twitter: @BabcockLibrary\nâ¢ Facebook: Babcock University Library\nâ¢ Instagram: @babcocklibrary\n\n**Office Hours:**\nMonday-Friday: 8:00 AM - 5:00 PM",
+      "answer": "**Contact the Library:**\n\n**Main Library:**\n📍 Address: University Library\n           Campus Main Building\n📞 Phone: +234 (0)123 456 7890\n📧 Email: library@university.edu\n🌐 Website: library.university.edu\n\n**Department Contacts:**\n• Circulation Desk: Ext. 1001\n• Reference Desk: Ext. 1002\n• Technical Services: Ext. 1003\n• Digital Resources: Ext. 1004\n• Interlibrary Loan: Ext. 1005\n\n**Social Media:**\n• Twitter: @UniversityLibrary\n• Facebook: University Library\n• Instagram: @universitylibrary\n\n**Office Hours:**\nMonday-Friday: 8:00 AM - 5:00 PM",
       "metadata": {
         "last_updated": "2024-01-15",
         "source": "Contact Info",

@@ -566,22 +566,29 @@ class BookSearchResource(Resource):
         except Exception:
             pass
 
-        # Search local database first
-        from app.utils.database import search_catalog
-        local_results = search_catalog(query=query, author=author, subject=subject, limit=limit)
-        
-        # Also try external OPAC search
+        # Search using OpenLibrary API (live data)
+        from app.chatbot import get_opac_client
         opac_client = get_opac_client()
         opac_results = opac_client.search(query, author, subject)
         
-        # Combine results
-        results = local_results + opac_results
+        # Also search local database
+        from app.utils.database import search_catalog
+        local_results = search_catalog(query=query, author=author, subject=subject, limit=limit)
+        
+        # Mark the source of each result
+        for result in opac_results:
+            result['source'] = 'openlibrary'
+        for result in local_results:
+            result['source'] = 'local'
+        
+        # Combine results - OpenLibrary first, then local
+        results = opac_results + local_results
 
         return {
             'query': query,
             'count': len(results),
             'results': results[:limit],
-            'source': 'local+opac'
+            'source': 'openlibrary+local'
         }
 
 
@@ -729,46 +736,68 @@ class AdminBooksResource(Resource):
         if jwt_data.get('user_type') != 'Admin':
             return {'error': 'Unauthorized'}, 403
 
-        data = request.get_json()
-        if not data:
-            return {'error': 'No data provided'}, 400
+        try:
+            data = request.get_json()
+            print(f"DEBUG: Received data for book creation: {data}")
+            
+            if not data:
+                print("DEBUG: No data provided in request")
+                return {'error': 'No data provided'}, 400
 
-        required_fields = ['title', 'author']
-        for field in required_fields:
-            if field not in data or not data[field]:
-                return {'error': f'{field} is required'}, 400
+            print(f"DEBUG: data keys: {list(data.keys())}")
+            
+            # Check required fields - more flexible validation
+            title = data.get('title', '')
+            author = data.get('author', '')
+            
+            print(f"DEBUG: title='{title}', author='{author}'")
+            
+            if not title or not title.strip():
+                return {'error': 'title is required'}, 400
+            if not author or not author.strip():
+                return {'error': 'author is required'}, 400
 
-        # Check for duplicate ISBN
-        if data.get('isbn'):
-            existing = Book.query.filter_by(isbn=data['isbn']).first()
-            if existing:
-                return {'error': 'A book with this ISBN already exists'}, 400
+            # Check for duplicate ISBN (only if provided and not empty)
+            isbn = data.get('isbn', '').strip() if data.get('isbn') else None
+            if isbn:
+                existing = Book.query.filter_by(isbn=isbn).first()
+                if existing:
+                    print(f"DEBUG: ISBN {isbn} already exists with book ID: {existing.id}")
+                    return {'error': 'A book with this ISBN already exists'}, 400
 
-        book = Book(
-            title=data['title'],
-            author=data['author'],
-            isbn=data.get('isbn'),
-            topic=data.get('topic'),
-            copies_available=data.get('copies_available', 1),
-            location=data.get('location'),
-            summary=data.get('summary')
-        )
+            print("DEBUG: Creating book object...")
+            book = Book(
+                title=title.strip(),
+                author=author.strip(),
+                isbn=isbn,
+                topic=data.get('topic', '').strip() if data.get('topic') else None,
+                copies_available=int(data.get('copies_available', 1)) if data.get('copies_available') else 1,
+                location=data.get('location', '').strip() if data.get('location') else None,
+                summary=data.get('summary', '').strip() if data.get('summary') else None
+            )
 
-        db.session.add(book)
-        db.session.commit()
+            db.session.add(book)
+            db.session.commit()
+            print(f"DEBUG: Book created successfully with ID: {book.id}")
 
-        log_activity(
-            get_jwt_identity(),
-            session.get('session_id', ''),
-            'book_added',
-            {'book_id': book.id, 'title': book.title}
-        )
+            log_activity(
+                get_jwt_identity(),
+                session.get('session_id', ''),
+                'book_added',
+                {'book_id': book.id, 'title': book.title}
+            )
 
-        return {
-            'status': 'success',
-            'message': 'Book added successfully',
-            'book': book_schema.dump(book)
-        }, 201
+            return {
+                'status': 'success',
+                'message': 'Book added successfully',
+                'book': book_schema.dump(book)
+            }, 201
+            
+        except Exception as e:
+            print(f"DEBUG ERROR: Exception in book creation: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return {'error': f'Server error: {str(e)}'}, 500
 
 
 class AdminBookResource(Resource):

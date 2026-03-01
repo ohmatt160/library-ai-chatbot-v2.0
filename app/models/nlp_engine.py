@@ -60,7 +60,12 @@ class HybridNLPEngine:
             'introduction': ['who are you', 'what are you', 'your name', 'introduce'],
             'about_you': ['about yourself', 'tell me about', 'describe yourself', 'more about you'],
             'bot_identity': ['who created', 'who creates', 'created you', 'create you', 'who designed', 'who made', 'identity'],
-            'bot_purpose': ['what do you do', 'your job', 'your function', 'how can you help']
+            'bot_purpose': ['what do you do', 'your job', 'your function', 'how can you help'],
+            # Borrow and reservation status
+            'my_borrows': ['my borrow', 'my loan', 'borrowing status', 'check out status', 'my checkouts', 'borrowed books', 'what books do i have'],
+            'my_reservations': ['my reservation', 'my hold', 'reservation status', 'hold status', 'my holds', 'reserved books', 'what books do i have reserved'],
+            'borrow_request': ['want to borrow', 'borrow this book', 'check out', 'take home', 'request to borrow'],
+            'return': ['return', 'due date', 'when to return', 'return my book']
         }
 
         self.library_intents = self.intent_examples
@@ -83,7 +88,7 @@ class HybridNLPEngine:
         import os
         if os.path.exists(path):
             try:
-                with open(path, 'r') as f:
+                with open(path, 'r', encoding='utf-8') as f:
                     return json.load(f).get('entries', [])
             except Exception as e:
                 print(f"[!] Error loading KB: {e}")
@@ -453,6 +458,12 @@ class HybridNLPEngine:
 
         if any(word in text_lower for word in ['renew']): return 'book_renewal', 0.9
         if any(word in text_lower for word in ['reserve', 'hold']): return 'book_reservation', 0.9
+        
+        # New intents for borrow/reserve/status
+        if any(word in text_lower for word in ['my borrow', 'my loan', 'borrowing status', 'my checkouts', 'borrowed books']): return 'my_borrows', 0.9
+        if any(word in text_lower for word in ['my reservation', 'my hold', 'reservation status', 'hold status', 'my holds', 'reserved books']): return 'my_reservations', 0.9
+        if any(word in text_lower for word in ['want to borrow', 'borrow this', 'check out', 'take home', 'request to borrow']): return 'borrow_request', 0.9
+        if any(word in text_lower for word in ['return', 'due date', 'when to return', 'return my']): return 'return', 0.9
 
         if any(word in text_lower for word in ['contact', 'phone', 'email']): return 'contact_info', 0.9
 

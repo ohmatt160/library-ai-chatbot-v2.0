@@ -1,13 +1,36 @@
 {
   "book_search": [
     "Find books about computer science",
-    "Search for Python programming books",
+    "search for books",
+    "how do i search for books",
+    "how can i find books",
+    "how to search for books",
+    "search books",
+    "find a book",
+    "look for books",
+    "search method for books",
+    "Find Python programming books",
     "I need books on artificial intelligence",
-    "Look for novels by Chinua Achebe",
+    "Look for novels by famous authors",
     "Find resources for my research paper",
     "Search the catalog for engineering textbooks",
     "Where can I find physics books?",
-    "Books about Nigerian history"
+    "Books about data science"
+  ],
+  "borrow_request": [
+    "I want to borrow this book",
+    "Can I borrow this book",
+    "I want to check out this book",
+    "Can I check out this book",
+    "borrow a book",
+    "I would like to borrow",
+    "Request to borrow",
+    "How do I borrow this book",
+    "I want to check out",
+    "Can I take this book home",
+    "I want to borrow a book",
+    "How can I borrow books",
+    "Can you help me borrow a book"
   ],
   "borrowing_info": [
     "How many books can I borrow?",
@@ -17,7 +40,33 @@
     "What are the overdue fines?",
     "Borrowing policy for students",
     "How long can I keep a book?",
-    "Renewal process"
+    "Renewal process",
+    "What is the borrowing limit?",
+    "How many books am I allowed to borrow?"
+  ],
+  "return": [
+    "How do I return a book",
+    "Where is the return drop",
+    "Can I return books by mail",
+    "What happens if I return a book late",
+    "I need to return my borrowed books",
+    "Is there a late fee for overdue books",
+    "How do I renew my books",
+    "What is the late fee per day",
+    "Return my book",
+    "When is my book due"
+  ],
+  "reservation": [
+    "I want to reserve a book",
+    "Can I reserve this book",
+    "Place a hold on a book",
+    "How do I reserve a book",
+    "Reserve a book for me",
+    "I want to put a hold on a book",
+    "Can I make a reservation",
+    "How to reserve books",
+    "Book reservation",
+    "Reserve this book"
   ],
   "library_hours": [
     "When is the library open?",
@@ -96,5 +145,25 @@
     "How can you help me?",
     "What is your job?",
     "What functions do you perform?"
+  ],
+  "my_borrows": [
+    "Check my borrows",
+    "My borrowed books",
+    "What books do I have",
+    "My current loans",
+    "Show my borrowing history",
+    "What books am I borrowing",
+    "View my borrowed items",
+    "My checkouts"
+  ],
+  "my_reservations": [
+    "Check my reservations",
+    "My reserved books",
+    "What books do I have reserved",
+    "My holds",
+    "Show my reservation status",
+    "What reservations do I have",
+    "View my holds",
+    "My pending reservations"
   ]
 }

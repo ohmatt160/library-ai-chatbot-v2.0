@@ -870,13 +870,370 @@ def create_opac_client(config: Optional[Dict] = None) -> OPACClient:
     """
     config = config or {}
 
-    # Check if we should use mock client
-    use_mock = config.get('use_mock', True)
+    # Get config values
+    opac_type = config.get('opac_type', 'openlibrary').lower()
     base_url = config.get('base_url', '')
+    use_mock = config.get('use_mock', False)
 
-    if use_mock or not base_url:
+    # Priority: OpenLibrary > use_mock setting > other OPAC types
+    if opac_type == 'openlibrary':
+        logger.info("Using OpenLibrary API client")
+        return OpenLibraryClient(config)
+    elif use_mock:
         logger.info("Using MockOPACClient for development")
         return MockOPACClient(config)
-    else:
-        logger.info(f"Using real OPAC client for {config.get('opac_type', 'generic')}")
+    elif base_url:
+        logger.info(f"Using real OPAC client for {opac_type}")
         return OPACClient(config)
+    else:
+        # Default to OpenLibrary if no config
+        logger.info("Using OpenLibrary API client (default)")
+        return OpenLibraryClient(config)
+
+
+class OpenLibraryClient:
+    """
+    Client for interacting with OpenLibrary API (openlibrary.org)
+    """
+
+    BASE_URL = "https://openlibrary.org"
+    COVERS_URL = "https://covers.openlibrary.org"
+
+    def __init__(self, config: Optional[Dict] = None):
+        """
+        Initialize OpenLibrary client
+
+        Args:
+            config: Configuration dictionary
+        """
+        self.config = config or {}
+        self.timeout = self.config.get('timeout', 30)
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'LibraryAIChatbot/1.0 (https://github.com/library-ai-chatbot)'
+        })
+
+    def search(self, query: str = '', author: str = '', title: str = '',
+               subject: str = '', isbn: str = '', limit: int = 20) -> List[Dict]:
+        """
+        Search for books using OpenLibrary API
+
+        Args:
+            query: General search query
+            author: Author name filter
+            title: Title filter
+            subject: Subject filter
+            isbn: ISBN filter
+            limit: Maximum number of results
+
+        Returns:
+            List of book results
+        """
+        try:
+            # Build search parameters
+            params = {}
+            
+            if isbn:
+                # ISBN search is more precise
+                search_url = f"{self.BASE_URL}/search.json"
+                params['isbn'] = isbn
+            elif title and author:
+                search_url = f"{self.BASE_URL}/search.json"
+                params['title'] = title
+                params['author'] = author
+            elif title:
+                search_url = f"{self.BASE_URL}/search.json"
+                params['title'] = title
+            elif author:
+                search_url = f"{self.BASE_URL}/search.json"
+                params['author'] = author
+            elif query:
+                search_url = f"{self.BASE_URL}/search.json"
+                params['q'] = query
+            elif subject:
+                search_url = f"{self.BASE_URL}/search.json"
+                params['subject'] = subject
+            else:
+                return []
+
+            params['limit'] = min(limit, 100)  # OpenLibrary max is 100
+            params['fields'] = 'key,title,author_name,first_publish_year,isbn,cover_i,subject,publisher,number_of_pages_median,edition_count'
+
+            response = self.session.get(search_url, params=params, timeout=self.timeout)
+            response.raise_for_status()
+            data = response.json()
+
+            results = []
+            for doc in data.get('docs', []):
+                book = self._parse_search_result(doc)
+                results.append(book)
+
+            return results
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"OpenLibrary search error: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Unexpected error in OpenLibrary search: {e}")
+            return []
+
+    def _parse_search_result(self, doc: Dict) -> Dict:
+        """
+        Parse OpenLibrary search result to standard format
+
+        Args:
+            doc: OpenLibrary document
+
+        Returns:
+            Parsed book in standard format
+        """
+        # Get cover ID
+        cover_id = doc.get('cover_i')
+        cover_url = None
+        if cover_id:
+            cover_url = f"{self.COVERS_URL}/b/id/{cover_id}-M.jpg"
+
+        # Get authors
+        authors = doc.get('author_name', [])
+        author_str = ', '.join(authors) if authors else 'Unknown Author'
+
+        # Get subjects
+        subjects = doc.get('subject', [])
+        subject_str = ', '.join(subjects[:3]) if subjects else ''
+
+        return {
+            'id': doc.get('key', '').replace('/works/', ''),
+            'openlibrary_key': doc.get('key', ''),  # Full key like /works/OL123W
+            'title': doc.get('title', 'Unknown Title'),
+            'author': author_str,
+            'first_publish_year': doc.get('first_publish_year'),
+            'isbn': doc.get('isbn', [None])[0] if doc.get('isbn') else None,
+            'cover_url': cover_url,
+            'subject': subject_str,
+            'publisher': doc.get('publisher', [None])[0] if doc.get('publisher') else None,
+            'pages': doc.get('number_of_pages_median'),
+            'editions': doc.get('edition_count', 0),
+            'source': 'openlibrary',
+            'relevance_score': 0.9,
+            'retrieved_at': datetime.now().isoformat()
+        }
+
+    def get_book_details(self, work_id: str) -> Optional[Dict]:
+        """
+        Get detailed information about a book
+
+        Args:
+            work_id: OpenLibrary work ID
+
+        Returns:
+            Book details dictionary
+        """
+        try:
+            # Handle both work IDs with and without /works/ prefix
+            if not work_id.startswith('/works/'):
+                work_id = f'/works/{work_id}'
+
+            url = f"{self.BASE_URL}{work_id}.json"
+            response = self.session.get(url, timeout=self.timeout)
+            response.raise_for_status()
+            data = response.json()
+
+            # Get author information if available
+            authors = []
+            if 'authors' in data:
+                for author_ref in data['authors']:
+                    try:
+                        author_url = f"{self.BASE_URL}{author_ref['author']['key']}.json"
+                        author_response = self.session.get(author_url, timeout=self.timeout)
+                        if author_response.status_code == 200:
+                            author_data = author_response.json()
+                            authors.append(author_data.get('name', 'Unknown'))
+                    except Exception:
+                        pass
+
+            # Get cover ID
+            covers = data.get('covers', [])
+            cover_url = None
+            if covers:
+                cover_url = f"{self.COVERS_URL}/b/id/{covers[0]}-L.jpg"
+
+            # Get subjects
+            subjects = data.get('subjects', [])
+            subject_str = ', '.join(subjects[:5]) if subjects else ''
+
+            return {
+                'id': work_id.replace('/works/', ''),
+                'title': data.get('title', 'Unknown Title'),
+                'author': ', '.join(authors) if authors else 'Unknown Author',
+                'description': self._extract_description(data),
+                'cover_url': cover_url,
+                'subject': subject_str,
+                'source': 'openlibrary',
+                'retrieved_at': datetime.now().isoformat()
+            }
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"OpenLibrary get details error: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error getting book details: {e}")
+            return None
+
+    def _extract_description(self, data: Dict) -> str:
+        """
+        Extract description from OpenLibrary work data
+
+        Args:
+            data: Work data dictionary
+
+        Returns:
+            Description string
+        """
+        description = data.get('description')
+        
+        if isinstance(description, dict):
+            return description.get('value', '')
+        elif isinstance(description, str):
+            return description
+        
+        return ''
+
+    def check_availability(self, book_id: str) -> Dict:
+        """
+        Check availability (OpenLibrary doesn't have real-time availability)
+
+        Args:
+            book_id: Book ID
+
+        Returns:
+            Availability dictionary
+        """
+        # OpenLibrary is a catalog, not a lending library
+        # Returns info about the book being available in the catalog
+        return {
+            'available': True,
+            'message': 'Available in OpenLibrary catalog',
+            'source': 'openlibrary'
+        }
+
+    def search_by_isbn(self, isbn: str) -> Optional[Dict]:
+        """
+        Search for a book by ISBN
+
+        Args:
+            isbn: ISBN code
+
+        Returns:
+            Book details or None
+        """
+        results = self.search(isbn=isbn, limit=1)
+        return results[0] if results else None
+
+    def get_book_by_isbn(self, isbn: str) -> Optional[Dict]:
+        """
+        Get detailed book information by ISBN using OpenLibrary's books API
+
+        Args:
+            isbn: ISBN-10 or ISBN-13 code
+
+        Returns:
+            Detailed book information or None
+        """
+        try:
+            # Clean ISBN - remove dashes
+            isbn = isbn.replace('-', '').replace(' ', '')
+            
+            # Use OpenLibrary's books API for detailed info
+            url = f"{self.BASE_URL}/api/books"
+            params = {
+                'bibkeys': f'ISBN:{isbn}',
+                'format': 'json',
+                'jscmd': 'data'
+            }
+            
+            response = self.session.get(url, params=params, timeout=self.timeout)
+            response.raise_for_status()
+            data = response.json()
+            
+            book_key = f'ISBN:{isbn}'
+            if book_key not in data:
+                logger.warning(f"No book found for ISBN: {isbn}")
+                return None
+            
+            book_data = data[book_key]
+            
+            # Extract cover information
+            cover_url = None
+            if 'cover' in book_data:
+                cover = book_data.get('cover', {})
+                cover_url = cover.get('medium') or cover.get('small') or cover.get('large')
+            
+            # Extract authors
+            authors = []
+            if 'authors' in book_data:
+                for author in book_data['authors']:
+                    if isinstance(author, dict) and 'name' in author:
+                        authors.append(author['name'])
+                    elif isinstance(author, str):
+                        authors.append(author)
+            
+            # Extract publishers
+            publishers = []
+            if 'publishers' in book_data:
+                for pub in book_data['publishers']:
+                    if isinstance(pub, dict) and 'name' in pub:
+                        publishers.append(pub['name'])
+                    elif isinstance(pub, str):
+                        publishers.append(pub)
+            
+            # Extract subjects
+            subjects = []
+            if 'subjects' in book_data:
+                for subject in book_data['subjects'][:10]:  # Limit to 10
+                    if isinstance(subject, dict) and 'name' in subject:
+                        subjects.append(subject['name'])
+                    elif isinstance(subject, str):
+                        subjects.append(subject)
+            
+            # Extract number of pages
+            number_of_pages = book_data.get('number_of_pages') or book_data.get('pages')
+            
+            # Extract publish date
+            publish_date = None
+            if 'publish_date' in book_data:
+                publish_date = book_data['publish_date']
+            
+            # Extract ISBNs
+            isbns = []
+            if 'isbn_13' in book_data:
+                isbns.extend(book_data['isbn_13'])
+            if 'isbn_10' in book_data:
+                isbns.extend(book_data['isbn_10'])
+            
+            return {
+                'id': f'isbn:{isbn}',
+                'isbn': isbn,
+                'title': book_data.get('title', 'Unknown Title'),
+                'authors': authors,
+                'author': ', '.join(authors) if authors else 'Unknown Author',
+                'publishers': publishers,
+                'publisher': publishers[0] if publishers else None,
+                'publish_date': publish_date,
+                'number_of_pages': number_of_pages,
+                'subjects': subjects,
+                'subject': ', '.join(subjects[:3]) if subjects else '',
+                'cover_url': cover_url,
+                'isbn_10': book_data.get('isbn_10', []),
+                'isbn_13': book_data.get('isbn_13', []),
+                'url': book_data.get('url'),
+                'source': 'openlibrary',
+                'retrieved_at': datetime.now().isoformat()
+            }
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"OpenLibrary get book by ISBN error: {e}")
+            # Fallback to search if API fails
+            return self.search_by_isbn(isbn)
+        except Exception as e:
+            logger.error(f"Unexpected error getting book by ISBN: {e}")
+            return self.search_by_isbn(isbn)

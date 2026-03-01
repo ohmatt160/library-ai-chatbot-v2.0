@@ -22,7 +22,7 @@ def get_opac_client():
         try:
             from flask import current_app
             opac_config = {
-                'opac_type': current_app.config.get('OPAC_TYPE', 'generic'),
+                'opac_type': current_app.config.get('OPAC_TYPE', 'openlibrary'),
                 'base_url': current_app.config.get('OPAC_URL', ''),
                 'api_key': current_app.config.get('OPAC_API_KEY', ''),
                 'username': current_app.config.get('OPAC_USERNAME', ''),
@@ -34,7 +34,7 @@ def get_opac_client():
             # Fallback if not in app context
             import os
             opac_config = {
-                'opac_type': os.getenv('OPAC_TYPE', 'generic'),
+                'opac_type': os.getenv('OPAC_TYPE', 'openlibrary'),
                 'base_url': os.getenv('OPAC_URL', ''),
                 'api_key': os.getenv('OPAC_API_KEY', ''),
                 'username': os.getenv('OPAC_USERNAME', ''),
@@ -44,6 +44,13 @@ def get_opac_client():
             }
         opac_client = create_opac_client(opac_config)
     return opac_client
+
+
+def reset_opac_client():
+    """Reset and reinitialize the OPAC client - useful when config changes"""
+    global opac_client
+    opac_client = None
+    return get_opac_client()
 
 # For backward compatibility
 def get_opac():

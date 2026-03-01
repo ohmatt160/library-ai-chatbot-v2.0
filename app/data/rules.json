@@ -19,7 +19,7 @@
     {
       "id": "rule_003",
       "pattern": "(?i)(return|due|late|fine|overdue)",
-      "response": "Books are due on the date stamped on your receipt. Overdue fines are 50 per day per book. You can return books at the circulation desk or in the book drop outside the library.",
+      "response": "Books are due on the date stamped on your receipt. Overdue fines are ₦50 per day per book. You can return books at the circulation desk or in the book drop outside the library.",
       "priority": 1,
       "requires_context": false,
       "conditions": []
@@ -27,7 +27,7 @@
     {
       "id": "rule_004",
       "pattern": "(?i)(contact|phone|email|address|location)",
-      "response": "You can contact the library at:\n Phone: 123-456-7890\n Email: library@babcock.edu.ng\n Address: Babcock University Library, Ilishan-Remo, Ogun State\n Visit during opening hours",
+      "response": "You can contact the library at:\n📞 Phone: 123-456-7890\n📧 Email: library@university.edu\n📍 Address: University Library, Campus Main Building\nVisit during opening hours",
       "priority": 1,
       "requires_context": false,
       "conditions": []
@@ -35,7 +35,7 @@
     {
       "id": "rule_005",
       "pattern": "(?i)(wifi|internet|wireless|connection)",
-      "response": "Connect to 'Babcock-Library' WiFi network. Use your student ID as both username and password. For technical issues, contact the IT help desk.",
+      "response": "Connect to 'Library-WiFi' network. Use your student ID as both username and password. For technical issues, contact the IT help desk.",
       "priority": 2,
       "requires_context": false,
       "conditions": []
@@ -43,13 +43,20 @@
     {
       "id": "rule_006",
       "pattern": "(?i)(print|printing|printer|photocopy)",
-      "response": "Printing and photocopying services are available at the Digital Resource Center on the ground floor. Cost is 10 per page for black/white and 50 per page for color. Payment can be made with your student ID card.",
+      "response": "Printing and photocopying services are available at the Digital Resource Center on the ground floor. Cost is ₦10 per page for black/white and ₦50 per page for color. Payment can be made with your student ID card.",
       "priority": 2,
       "requires_context": false,
       "conditions": []
     },
     {
       "id": "rule_007",
+      "pattern": "(?i)(how\\s*(do|can)\\s*(I|we|you)|instructions?|guide|tell\\s*me\\s*how).*search",
+      "response": "Here's how to search for books in our library:\n\n1. 📱 **Online Catalog**: Go to the library website and use the search bar. You can search by title, author, ISBN, or topic.\n\n2. 🔍 **Keywords**: Use specific keywords like 'computer science' or 'business management' for better results.\n\n3. 📍 **Location**: Note the call number and shelf location shown in the catalog.\n\n4. 📖 **Availability**: Check if the book is available or if it's already borrowed.\n\n5. 💻 **Digital Access**: Many e-books are available online - look for the 'View Online' button.\n\nWould you like me to help you search for a specific topic?",
+      "requires_context": false,
+      "conditions": []
+    },
+    {
+      "id": "rule_016",
       "pattern": "(?i)(quiet|silent|study\\s*area|noise)",
       "response": "The library has designated quiet study areas on floors 2 and 3. Group study rooms are available on the ground floor and can be booked at the circulation desk. Please maintain silence in quiet zones.",
       "priority": 2,
@@ -57,7 +64,7 @@
       "conditions": []
     },
     {
-      "id": "rule_008",
+      "id": "rule_017",
       "pattern": "(?i)(database|journal|article|research)",
       "response": "The library provides access to several online databases including JSTOR, IEEE Xplore, ScienceDirect, and SpringerLink. You can access them from any campus computer or through the library website using your student credentials.",
       "priority": 2,
@@ -67,7 +74,7 @@
     {
       "id": "rule_009",
       "pattern": "(?i)(hello|hi|hey|greetings|good\\s*(morning|afternoon|evening))",
-      "response": "Hello!  I'm the Babcock University Library Assistant. How can I help you today?",
+      "response": "Hello! I'm the Library AI Assistant. How can I help you today?",
       "priority": 3,
       "requires_context": false,
       "conditions": []
@@ -75,7 +82,7 @@
     {
       "id": "rule_010",
       "pattern": "(?i)(thank|thanks|appreciate|grateful)",
-      "response": "You're welcome!  Is there anything else I can help you with?",
+      "response": "You're welcome! Is there anything else I can help you with?",
       "priority": 3,
       "requires_context": false,
       "conditions": []
@@ -83,7 +90,7 @@
     {
       "id": "rule_011",
       "pattern": "(?i)(bye|goodbye|see\\s*you|farewell)",
-      "response": "Goodbye!  Feel free to come back if you need more assistance with the library.",
+      "response": "Goodbye! Feel free to come back if you need more assistance with the library.",
       "priority": 3,
       "requires_context": false,
       "conditions": []
@@ -91,7 +98,7 @@
     {
       "id": "rule_012",
       "pattern": "(?i)(membership|register|sign\\s*up|library\\s*card)",
-      "response": "All Babcock University students and staff are automatically library members. Your student/staff ID serves as your library card. Please bring it with you when visiting the library.",
+      "response": "All registered students and staff are automatically library members. Your student/staff ID serves as your library card. Please bring it with you when visiting the library.",
       "priority": 2,
       "requires_context": false,
       "conditions": []
@@ -116,6 +123,22 @@
       "id": "rule_015",
       "pattern": "(?i)(librarian|staff|help\\s*desk|assistance)",
       "response": "Library staff are available at the circulation and reference desks during opening hours. For specialized research help, you can book an appointment with a subject librarian.",
+      "priority": 2,
+      "requires_context": false,
+      "conditions": []
+    },
+    {
+      "id": "rule_018",
+      "pattern": "(?i)(my\\s*borrow|my\\s*loan|check\\s*out\\s*status|borrowing\\s*status)",
+      "response": "To check your borrowing status, please log into your account and visit the 'My Borrow Requests' page. There you can see all your current borrows, due dates, and renewal options.",
+      "priority": 2,
+      "requires_context": false,
+      "conditions": []
+    },
+    {
+      "id": "rule_019",
+      "pattern": "(?i)(my\\s*reservation|reserve\\s*status|hold\\s*status)",
+      "response": "To check your reservations, please visit the 'My Borrow Requests' page in your account. You can see active reservations, items ready for pickup, and expiry dates.",
       "priority": 2,
       "requires_context": false,
       "conditions": []

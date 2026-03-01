@@ -23,6 +23,14 @@ import type {
   CreateContactRequest,
   Book,
   Contact,
+  BorrowRequest,
+  BorrowRequestsResponse,
+  Notification,
+  NotificationsResponse,
+  BorrowAnalytics,
+  ReserveRequest,
+  ReservationsResponse,
+  ReservationAnalytics,
 } from '../types';
 
 const BASE_URL = 'http://localhost:5000/api';
@@ -187,5 +195,143 @@ export const adminApi = {
 
   deleteContact: async (id: number): Promise<void> => {
     await api.delete(`/admin/contacts/${id}`);
+  },
+};
+
+// ====================== BORROW API ======================
+
+export const borrowApi = {
+  // User endpoints
+  createRequest: async (bookId: number): Promise<{ status: string; message: string; request: BorrowRequest }> => {
+    const response = await api.post('/borrow/request', { book_id: bookId });
+    return response.data;
+  },
+
+  getMyRequests: async (status?: string): Promise<BorrowRequestsResponse> => {
+    const params = status ? { status } : {};
+    const response = await api.get('/borrow/my-requests', { params });
+    return response.data;
+  },
+
+  getRequestDetails: async (requestId: number): Promise<{ request: BorrowRequest; history: any[] }> => {
+    const response = await api.get(`/borrow/request/${requestId}`);
+    return response.data;
+  },
+
+  // Notifications
+  getNotifications: async (unreadOnly = false): Promise<NotificationsResponse> => {
+    const response = await api.get('/borrow/notifications', { params: { unread: unreadOnly } });
+    return response.data;
+  },
+
+  markNotificationRead: async (notificationId: number): Promise<void> => {
+    await api.post(`/borrow/notifications/${notificationId}/read`);
+  },
+
+  markAllNotificationsRead: async (): Promise<void> => {
+    await api.post('/borrow/notifications/read-all');
+  },
+
+  // Admin endpoints
+  getAllRequests: async (status?: string, userId?: string, limit = 50): Promise<BorrowRequestsResponse> => {
+    const params: Record<string, any> = { limit };
+    if (status) params.status = status;
+    if (userId) params.user_id = userId;
+    const response = await api.get('/admin/borrow/requests', { params });
+    return response.data;
+  },
+
+  getPendingRequests: async (): Promise<BorrowRequestsResponse> => {
+    const response = await api.get('/admin/borrow/requests/pending');
+    return response.data;
+  },
+
+  approveRequest: async (requestId: number, pickupDays = 3, notes = ''): Promise<{ status: string; request: BorrowRequest }> => {
+    const response = await api.post(`/admin/borrow/approve/${requestId}`, { pickup_days: pickupDays, notes });
+    return response.data;
+  },
+
+  denyRequest: async (requestId: number, reason: string): Promise<{ status: string; request: BorrowRequest }> => {
+    const response = await api.post(`/admin/borrow/deny/${requestId}`, { reason });
+    return response.data;
+  },
+
+  markPickedUp: async (requestId: number): Promise<{ status: string; request: BorrowRequest }> => {
+    const response = await api.post(`/admin/borrow/mark-picked/${requestId}`);
+    return response.data;
+  },
+
+  markReturned: async (requestId: number): Promise<{ status: string; request: BorrowRequest }> => {
+    const response = await api.post(`/admin/borrow/mark-returned/${requestId}`);
+    return response.data;
+  },
+
+  // Analytics
+  getAnalytics: async (days = 30): Promise<{ status: string; analytics: BorrowAnalytics; period_days: number }> => {
+    const response = await api.get('/admin/borrow/analytics', { params: { days } });
+    return response.data;
+  },
+
+  // Bulk operations
+  bulkApprove: async (requestIds: number[], pickupDays = 3): Promise<{ status: string; approved_count: number }> => {
+    const response = await api.post('/admin/borrow/bulk-approve', { request_ids: requestIds, pickup_days: pickupDays });
+    return response.data;
+  },
+
+  bulkDeny: async (requestIds: number[], reason: string): Promise<{ status: string; denied_count: number }> => {
+    const response = await api.post('/admin/borrow/bulk-deny', { request_ids: requestIds, reason });
+    return response.data;
+  },
+
+  // ====================== RESERVATION API ======================
+  
+  // User reservation endpoints
+  createReservation: async (bookId: number, notes = ''): Promise<{ status: string; message: string; reservation: ReserveRequest }> => {
+    const response = await api.post('/borrow/reserve', { book_id: bookId, notes });
+    return response.data;
+  },
+
+  getMyReservations: async (status?: string): Promise<ReservationsResponse> => {
+    const params = status ? { status } : {};
+    const response = await api.get('/borrow/my-reservations', { params });
+    return response.data;
+  },
+
+  getReservationDetails: async (reservationId: number): Promise<{ reservation: ReserveRequest }> => {
+    const response = await api.get(`/borrow/reservations/${reservationId}`);
+    return response.data;
+  },
+
+  cancelReservation: async (reservationId: number): Promise<{ status: string; message: string }> => {
+    const response = await api.delete(`/borrow/reservations/${reservationId}`);
+    return response.data;
+  },
+
+  // Admin reservation endpoints
+  getAllReservations: async (status?: string, page = 1, perPage = 20): Promise<ReservationsResponse> => {
+    const params: Record<string, any> = { page, per_page: perPage };
+    if (status) params.status = status;
+    const response = await api.get('/admin/borrow/reservations', { params });
+    return response.data;
+  },
+
+  fulfillReservation: async (reservationId: number): Promise<{ status: string; message: string }> => {
+    const response = await api.post(`/admin/borrow/reservations/${reservationId}/fulfill`);
+    return response.data;
+  },
+
+  adminCancelReservation: async (reservationId: number, reason: string): Promise<{ status: string; message: string }> => {
+    const response = await api.post(`/admin/borrow/reservations/${reservationId}/cancel`, { reason });
+    return response.data;
+  },
+
+  expireReservation: async (reservationId: number): Promise<{ status: string; message: string }> => {
+    const response = await api.post(`/admin/borrow/reservations/${reservationId}/expire`);
+    return response.data;
+  },
+
+  getReservationAnalytics: async (days = 30): Promise<{ status: string; analytics: ReservationAnalytics }> => {
+    const response = await api.get('/admin/borrow/reservations/analytics', { params: { days } });
+    return response.data;
   },
 };

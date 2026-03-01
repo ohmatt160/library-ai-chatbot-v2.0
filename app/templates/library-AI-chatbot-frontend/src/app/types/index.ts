@@ -91,6 +91,17 @@ export interface Book {
   copies_available: number;
   location: string;
   summary?: string;
+  // OpenLibrary specific fields
+  cover_url?: string;
+  source?: 'openlibrary' | 'local';
+  openlibrary_key?: string;
+  publish_year?: number;
+  publisher?: string;
+  description?: string;
+  page_count?: number;
+  subjects?: string[];
+  // For linking to OpenLibrary
+  preview_url?: string;
 }
 
 export interface BookSearchParams {
@@ -101,9 +112,11 @@ export interface BookSearchParams {
 
 export interface BookSearchResponse {
   query: string;
+  intent?: string;
   count: number;
   results: Book[];
   source: string;
+  timestamp?: string;
 }
 
 export interface Activity {
@@ -191,4 +204,106 @@ export interface CreateContactRequest {
   phone?: string;
   subject?: string;
   message: string;
+}
+
+// ====================== BORROW TYPES ======================
+
+export interface BorrowRequest {
+  id: number;
+  user_id: string;
+  book_id: number;
+  request_date: string;
+  status: 'pending' | 'approved' | 'denied' | 'picked_up' | 'returned';
+  admin_notes: string | null;
+  processed_by: string | null;
+  processed_date: string | null;
+  pickup_deadline: string | null;
+  return_date: string | null;
+  user?: {
+    id: string;
+    username: string;
+    first_name: string;
+    last_name: string;
+  };
+  book?: Book;
+}
+
+export interface BorrowHistory {
+  id: number;
+  request_id: number;
+  action: string;
+  action_by: string | null;
+  action_date: string;
+  notes: string | null;
+}
+
+export interface Notification {
+  id: number;
+  user_id: string;
+  title: string;
+  message: string;
+  notification_type: 'borrow_request' | 'borrow_approved' | 'borrow_denied' | 'pickup_reminder' | 'general';
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface BorrowAnalytics {
+  requests_by_status: Record<string, number>;
+  requests_over_time: Array<{ date: string; count: number }>;
+  most_requested_books: Array<{ id: number; title: string; count: number }>;
+  most_active_borrowers: Array<{ id: string; username: string; name: string; count: number }>;
+  average_approval_hours: number;
+  approval_rate: number;
+  denial_reasons: Array<{ reason: string; count: number }>;
+  pickup_compliance: number;
+  total_requests: number;
+}
+
+export interface BorrowRequestsResponse {
+  status: string;
+  count: number;
+  requests: BorrowRequest[];
+}
+
+export interface ReserveRequest {
+  id: number;
+  user_id: string;
+  book_id: number;
+  book?: Book;
+  user?: {
+    id: string;
+    username: string;
+    first_name: string;
+    last_name: string;
+  };
+  status: 'active' | 'fulfilled' | 'cancelled' | 'expired';
+  reserve_date: string;
+  expiry_date: string;
+  fulfilled_date?: string;
+  cancelled_date?: string;
+  notify_when_available?: boolean;
+  notes?: string;
+  admin_notes?: string;
+}
+
+export interface ReservationsResponse {
+  status: string;
+  reservations: ReserveRequest[];
+  total?: number;
+  pages?: number;
+  current_page?: number;
+}
+
+export interface ReservationAnalytics {
+  reservations_by_status: Record<string, number>;
+  reservations_over_time: Array<{ date: string; count: number }>;
+  most_reserved_books: Array<{ id: number; title: string; count: number }>;
+  average_fulfillment_hours: number;
+  expiry_rate: number;
+}
+
+export interface NotificationsResponse {
+  status: string;
+  count: number;
+  notifications: Notification[];
 }

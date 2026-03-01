@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { LinkInlineRenderer } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import type { Message } from '../../types';
@@ -13,8 +13,24 @@ interface ChatMessageProps {
   onFollowUp: (message: string) => void;
 }
 
+// Custom link component that opens in new tab
 export function ChatMessage({ message, onFeedback, onFollowUp }: ChatMessageProps) {
   const isUser = message.sender === 'user';
+
+  const LinkRenderer: LinkInlineRenderer = ({ href, children }) => (
+    <a 
+      href={href} 
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="text-blue-500 underline hover:text-blue-600 transition-colors"
+    >
+      {children}
+    </a>
+  );
+
+  const components = {
+    a: LinkRenderer
+  };
 
   return (
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
@@ -31,7 +47,10 @@ export function ChatMessage({ message, onFeedback, onFollowUp }: ChatMessageProp
             <p>{message.content}</p>
           ) : (
             <div className="prose prose-sm dark:prose-invert max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]}
+                components={components}
+              >
                 {message.content}
               </ReactMarkdown>
             </div>
