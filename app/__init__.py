@@ -101,7 +101,7 @@ def create_app(config_class='config.DevelopmentConfig'):
         db.create_all()
         
         # Run database migrations for existing tables
-        _run_migrations(app)
+        # _run_migrations(app)
 
     from .model import User
 
