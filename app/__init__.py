@@ -96,14 +96,14 @@ def create_app(config_class='config.DevelopmentConfig'):
     login_manager.init_app(app)
     jwt.init_app(app)
 
-    # Defer database table creation to first request (for faster startup)
-    @app.before_first_request
-    def init_db():
+    # Create tables immediately but don't block on errors
+    # This is necessary for the app to function
+    with app.app_context():
         try:
             db.create_all()
             app.logger.info("Database tables created/verified successfully")
         except Exception as e:
-            app.logger.warning(f"Could not create database tables: {e}")
+            app.logger.error(f"Database setup error: {e}")
 
     from .model import User
 
