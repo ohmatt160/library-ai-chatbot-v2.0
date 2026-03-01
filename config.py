@@ -151,15 +151,20 @@ load_dotenv()
 class Config:
     """Base configuration - ALL secrets from environment variables"""
 
-    # Flask settings
+    # Flask settings - use environment variable or fallback to a generated key
     SECRET_KEY = os.getenv('SECRET_KEY')
     if not SECRET_KEY:
-        raise ValueError("SECRET_KEY must be set in .env file")
+        # For production, generate a persistent key or set via env var
+        import secrets
+        SECRET_KEY = secrets.token_hex(32)
+        print("WARNING: Using generated SECRET_KEY. Set SECRET_KEY env var for persistence.")
 
     # JWT settings for API authentication
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
     if not JWT_SECRET_KEY:
-        raise ValueError("JWT_SECRET_KEY must be set in .env file")
+        # Use SECRET_KEY as fallback for JWT
+        JWT_SECRET_KEY = SECRET_KEY
+        print("WARNING: Using SECRET_KEY as JWT_SECRET_KEY. Set JWT_SECRET_KEY env var for production.")
 
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
