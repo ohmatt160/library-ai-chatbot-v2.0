@@ -19,3 +19,4 @@ chardet
 pymysql
 gunicorn
 mysqlclient
+pymysql
