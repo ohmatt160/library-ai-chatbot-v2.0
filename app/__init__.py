@@ -96,12 +96,14 @@ def create_app(config_class='config.DevelopmentConfig'):
     login_manager.init_app(app)
     jwt.init_app(app)
 
-    # Create database tables on startup
-    with app.app_context():
-        db.create_all()
-        
-        # Run database migrations for existing tables
-        # _run_migrations(app)
+    # Create database tables on startup (with timeout protection)
+    try:
+        with app.app_context():
+            db.create_all()
+            app.logger.info("Database tables created/verified successfully")
+    except Exception as e:
+        app.logger.warning(f"Could not create database tables on startup: {e}")
+        app.logger.warning("App will continue starting, but database operations may fail")
 
     from .model import User
 

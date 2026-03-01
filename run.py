@@ -48,8 +48,13 @@ def create_tables():
 # Create tables on module import (for gunicorn production)
 try:
     create_tables()
+    print("✅ Database tables verified")
 except Exception as e:
     logging.warning(f"Could not create tables on startup: {e}")
+
+# Verify app was created successfully
+print(f"✅ Flask app created successfully: {app}")
+print(f"✅ App name: {app.name}")
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
