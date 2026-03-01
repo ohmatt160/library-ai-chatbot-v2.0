@@ -10,7 +10,6 @@ ENV/
 *.pkl
 .idea/
 .vscode/
-config.py
 create_admin.py
 seed.py
 node_modules/
