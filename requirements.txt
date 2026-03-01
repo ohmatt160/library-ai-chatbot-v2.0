@@ -18,3 +18,4 @@ typer
 chardet
 pymysql
 gunicorn
+mysqlclient
