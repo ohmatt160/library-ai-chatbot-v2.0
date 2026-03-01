@@ -4,10 +4,12 @@ Application factory for the Intelligent Library Chat Assistant
 
 import os
 from datetime import timedelta
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory, Blueprint
 from flask_cors import CORS
 from flask_restful import Api
 from .extensions import db, bcrypt, ma, login_manager, jwt
+from flask import Flask, send_from_directory
+import os
 
 
 def _run_migrations(app):
@@ -50,7 +52,16 @@ def _run_migrations(app):
 
 def create_app(config_class='config.DevelopmentConfig'):
     """Create and configure the Flask application"""
-    app = Flask(__name__)
+    app = Flask(__name__,
+                static_folder='static',  # Point to your React build
+                template_folder='templates')
+
+    # ... your existing config ...
+
+    # 👇 THIS ROUTE GOES HERE (on app, not blueprint)
+
+
+
 
     # Load configuration
     app.config.from_object(config_class)
@@ -120,6 +131,18 @@ def create_app(config_class='config.DevelopmentConfig'):
     @jwt.revoked_token_loader
     def revoked_token_callback(jwt_header, jwt_payload):
         return jsonify({'error': 'Token has been revoked', 'code': 'token_revoked'}), 401
+
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_react(path):
+        """Serve React static files"""
+        if path and os.path.exists(os.path.join(app.static_folder, path)):
+            return send_from_directory(app.static_folder, path)
+        return send_from_directory(app.static_folder, 'index.html')
+
+    # Register blueprints
+    from app.api.routes import api_bp
+    app.register_blueprint(api_bp, url_prefix='/api')
 
     # Initialize API
     api = Api(app)

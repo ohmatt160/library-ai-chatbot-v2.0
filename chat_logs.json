@@ -4406,5 +4406,22 @@
         "Special holiday hours"
       ]
     }
+  },
+  {
+    "timestamp": 1772360836.4046073,
+    "datetime": "2026-03-01 11:27:16",
+    "user_id": "cccf7384-5177-4303-9ae0-cb4f378e0755",
+    "session_id": "7b1ffbb6-7e86-4eba-8916-c192c7b93d6f",
+    "user_message": "find python",
+    "bot_response": "\ud83c\udf10 **Results from OpenLibrary (external catalog):**\n\nI found 10 book(s) matching your search:\n\n\u2022 **Metamorphoses** by Ovid\n  \ud83d\udd17 [View on OpenLibrary](https://openlibrary.org/works/OL15292640W)\n\u2022 **Learning Python** by Mark Lutz, David Ascher\n  \ud83d\udd17 [View on OpenLibrary](https://openlibrary.org/works/OL2784125W)\n\u2022 **Python** by Mark Lutz\n  \ud83d\udd17 [View on OpenLibrary](https://openlibrary.org/works/OL2784127W)\n\u2022 **Python Cookbook** by Alex Martelli, David Ascher, David M. Beazley, Brian K. Jones\n  \ud83d\udd17 [View on OpenLibrary](https://openlibrary.org/works/OL14873289W)\n\u2022 **Programming Python** by Mark Lutz\n  \ud83d\udd17 [View on OpenLibrary](https://openlibrary.org/works/OL2784126W)\n\u2022 **Fluent Python** by Luciano Ramalho\n  \ud83d\udd17 [View on OpenLibrary](https://openlibrary.org/works/OL19932156W)\n\u2022 **Core Python Programming** by R. Nageswara Rao\n  \ud83d\udd17 [View on OpenLibrary](https://openlibrary.org/works/OL30906747W)\n\u2022 **Black Hat Python** by Justin Seitz, Tim Arnold\n  \ud83d\udd17 [View on OpenLibrary](https://openlibrary.org/works/OL19547345W)\n\u2022 **Think Python** by Allen B. Downey, Allen Downey\n  \ud83d\udd17 [View on OpenLibrary](https://openlibrary.org/works/OL16976951W)\n\u2022 **Python** by Joshua Welsh\n  \ud83d\udd17 [View on OpenLibrary](https://openlibrary.org/works/OL20212390W)\n\nReply with the number (e.g., '1') to get more details about a specific book, or ask me to reserve one.",
+    "intent": "book_search",
+    "confidence": 0.8,
+    "processing_method": "nlp_based",
+    "context": {
+      "history": [],
+      "state": "greeting",
+      "entities": {},
+      "user_preferences": {}
+    }
   }
 ]

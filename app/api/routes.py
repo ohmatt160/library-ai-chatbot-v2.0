@@ -27,6 +27,8 @@ dialogue_manager = DialogueManager(rule_engine, nlp_engine, response_generator)
 api_bp = Blueprint('api', __name__)
 
 
+
+
 @api_bp.route('/chat', methods=['POST'])
 @jwt_required()
 def chat():

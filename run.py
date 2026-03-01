@@ -8,7 +8,7 @@ from app import create_app
 from app.extensions import db
 from app.model import User
 from config import Config
-os.environ['HF_TOKEN'] = Config.HF_token
+os.environ['HF_TOKEN'] = Config.HF_TOKEN
 # Reduce SQLAlchemy logging
 logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 logging.getLogger('sqlalchemy.pool').setLevel(logging.WARNING)
