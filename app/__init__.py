@@ -142,6 +142,14 @@ def create_app(config_class='config.DevelopmentConfig'):
     app.register_blueprint(api_bp, url_prefix='/api')
     logger.info("[create_app] Step E: ✓ Blueprints registered")
 
+    # Create database tables if they don't exist
+    try:
+        with app.app_context():
+            db.create_all()
+            logger.info("[create_app] Database tables created/verified")
+    except Exception as e:
+        logger.warning(f"[create_app] Could not create database tables: {e}")
+
     # Initialize API
     logger.info("[create_app] Step F: Initializing API resources...")
     api = Api(app)

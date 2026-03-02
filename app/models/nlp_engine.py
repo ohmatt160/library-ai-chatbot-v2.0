@@ -30,8 +30,8 @@ class HybridNLPEngine:
         try:
             self.spacy_nlp = _spacy.load("en_core_web_sm")
             print("[OK] spaCy model loaded")
-        except:
-            print("[!] Could not load spaCy model")
+        except Exception as e:
+            print(f"[!] Could not load spaCy model: {e}")
             self.spacy_nlp = None
 
         # Load trained models if they exist
@@ -48,10 +48,14 @@ class HybridNLPEngine:
         # Load SentenceTransformer if available
         try:
             from sentence_transformers import SentenceTransformer
+            # Disable download progress bars and use cache
+            import os
+            os.environ['HF_HUB_DISABLE_PROGRESS_BARS'] = '1'
+            os.environ['TOKENIZERS_PARALLELISM'] = 'false'
             self.sbert_model = SentenceTransformer('all-MiniLM-L6-v2')
             print("[OK] SentenceTransformer loaded")
-        except ImportError:
-            print("[!] SentenceTransformer not available")
+        except Exception as e:
+            print(f"[!] SentenceTransformer not available: {e}")
             self.sbert_model = None
 
         # Intent examples for keyword matching (fallback)

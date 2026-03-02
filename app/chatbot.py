@@ -62,7 +62,11 @@ def get_nlp_engine():
     global _nlp_engine
     if _nlp_engine is None:
         from app.models.nlp_engine import HybridNLPEngine
-        _nlp_engine = HybridNLPEngine()
+        try:
+            _nlp_engine = HybridNLPEngine()
+        except Exception as e:
+            print(f"[ERROR] Failed to initialize NLP engine: {e}")
+            raise
     return _nlp_engine
 
 def get_response_generator():
@@ -83,5 +87,11 @@ def get_dialogue_manager():
     global _dialogue_manager
     if _dialogue_manager is None:
         from app.models.dialogue_manager import DialogueManager
-        _dialogue_manager = DialogueManager(get_rule_engine(), get_nlp_engine(), get_response_generator())
+        try:
+            _dialogue_manager = DialogueManager(get_rule_engine(), get_nlp_engine(), get_response_generator())
+        except Exception as e:
+            print(f"[ERROR] Failed to initialize dialogue manager: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
     return _dialogue_manager

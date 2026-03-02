@@ -55,7 +55,11 @@ def chat():
         start_time = time.time()
 
         # Process message through dialogue manager
-        result = get_dialogue_manager().process_message(
+        dialogue_manager = get_dialogue_manager()
+        if dialogue_manager is None:
+            return jsonify({'error': 'Chat service temporarily unavailable'}), 503
+            
+        result = dialogue_manager.process_message(
             user_id=user_id,
             session_id=session_id,
             message=user_message

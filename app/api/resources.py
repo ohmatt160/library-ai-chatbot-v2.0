@@ -559,53 +559,59 @@ class ActivityResource(Resource):
 class BookSearchResource(Resource):
     def get(self):
         """Search books"""
-        # Use Flask's request.args for GET requests instead of reqparse
-        query = request.args.get('q', '')
-        author = request.args.get('author', '')
-        subject = request.args.get('subject', '')
-        limit = int(request.args.get('limit', 20))
-
-        if not query and not author and not subject:
-            return {'error': 'At least one search parameter is required'}, 400
-
-        # Try to log activity if user is authenticated
         try:
-            from flask_jwt_extended import verify_jwt_in_request
-            verify_jwt_in_request(optional=True)
-            jwt_identity = get_jwt_identity()
-            if jwt_identity:
-                log_activity(jwt_identity, session.get('session_id', ''), 'book_search', {
-                    'query': query,
-                    'author': author,
-                    'subject': subject
-                })
-        except Exception:
-            pass
+            # Use Flask's request.args for GET requests instead of reqparse
+            query = request.args.get('q', '')
+            author = request.args.get('author', '')
+            subject = request.args.get('subject', '')
+            limit = int(request.args.get('limit', 20))
 
-        # Search using OpenLibrary API (live data)
-        from app.chatbot import get_opac_client
-        opac_client = get_opac_client()
-        opac_results = opac_client.search(query, author, subject)
-        
-        # Also search local database
-        from app.utils.database import search_catalog
-        local_results = search_catalog(query=query, author=author, subject=subject, limit=limit)
-        
-        # Mark the source of each result
-        for result in opac_results:
-            result['source'] = 'openlibrary'
-        for result in local_results:
-            result['source'] = 'local'
-        
-        # Combine results - OpenLibrary first, then local
-        results = opac_results + local_results
+            if not query and not author and not subject:
+                return {'error': 'At least one search parameter is required'}, 400
 
-        return {
-            'query': query,
-            'count': len(results),
-            'results': results[:limit],
-            'source': 'openlibrary+local'
-        }
+            # Try to log activity if user is authenticated
+            try:
+                from flask_jwt_extended import verify_jwt_in_request
+                verify_jwt_in_request(optional=True)
+                jwt_identity = get_jwt_identity()
+                if jwt_identity:
+                    log_activity(jwt_identity, session.get('session_id', ''), 'book_search', {
+                        'query': query,
+                        'author': author,
+                        'subject': subject
+                    })
+            except Exception:
+                pass
+
+            # Search using OpenLibrary API (live data)
+            from app.chatbot import get_opac_client
+            opac_client = get_opac_client()
+            opac_results = opac_client.search(query, author, subject)
+            
+            # Also search local database
+            from app.utils.database import search_catalog
+            local_results = search_catalog(query=query, author=author, subject=subject, limit=limit)
+            
+            # Mark the source of each result
+            for result in opac_results:
+                result['source'] = 'openlibrary'
+            for result in local_results:
+                result['source'] = 'local'
+            
+            # Combine results - OpenLibrary first, then local
+            results = opac_results + local_results
+
+            return {
+                'query': query,
+                'count': len(results),
+                'results': results[:limit],
+                'source': 'openlibrary+local'
+            }
+        except Exception as e:
+            import traceback
+            print(f"[ERROR] Book search failed: {e}")
+            traceback.print_exc()
+            return {'error': 'Search failed', 'message': str(e)}, 500
 
 
 class AdminUsersResource(Resource):
