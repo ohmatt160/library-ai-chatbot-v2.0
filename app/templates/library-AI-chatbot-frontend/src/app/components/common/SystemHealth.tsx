@@ -11,7 +11,7 @@ export function SystemHealth() {
     const checkHealth = async () => {
       const start = Date.now();
       try {
-        const response = await fetch('http://localhost:5000/api/session', {
+        const response = await fetch('/api/session', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
