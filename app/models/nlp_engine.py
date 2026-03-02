@@ -22,6 +22,36 @@ class HybridNLPEngine:
         self.intent_classifier = None
         self.sbert_model = None
         
+        # ALWAYS initialize intent examples (needed for keyword matching)
+        self.intent_examples = {
+            'book_search': ['find', 'search', 'locate', 'book', 'textbook'],
+            'library_hours': ['hour', 'open', 'close', 'schedule', 'time'],
+            'book_availability': ['available', 'availability', 'in stock', 'on shelf'],
+            'book_renewal': ['renew', 'extension', 'prolong'],
+            'book_reservation': ['reserve', 'hold', 'booking'],
+            'borrowing_policy': ['policy', 'rule', 'limit', 'fine', 'how many', 'how long'],
+            'contact_info': ['contact', 'phone', 'email', 'call', 'address', 'department'],
+            'research_assistance': ['research', 'journal', 'article', 'database', 'citation', 'paper', 'literature'],
+            'study_rooms': ['study room', 'booking space', 'reserve room'],
+            'library_services': ['printing', 'scanning', 'workshop', 'service'],
+            'greeting': ['hello', 'hi', 'hey', 'greetings', 'morning', 'afternoon', 'evening'],
+            'farewell': ['bye', 'goodbye', 'thank', 'thanks'],
+            'introduction': ['who are you', 'what are you', 'your name', 'introduce'],
+            'about_you': ['about yourself', 'tell me about', 'describe yourself', 'more about you'],
+            'bot_identity': ['who created', 'who creates', 'created you', 'create you', 'who designed', 'who made', 'identity'],
+            'bot_purpose': ['what do you do', 'your job', 'your function', 'how can you help'],
+            'my_borrows': ['my borrow', 'my loan', 'borrowing status', 'check out status', 'my checkouts', 'borrowed books', 'what books do i have'],
+            'my_reservations': ['my reservation', 'my hold', 'reservation status', 'hold status', 'my holds', 'reserved books', 'what books do i have reserved'],
+            'borrow_request': ['want to borrow', 'borrow this book', 'check out', 'take home', 'request to borrow'],
+            'return': ['return', 'due date', 'when to return', 'return my book']
+        }
+        self.library_intents = self.intent_examples
+        self.library_keywords = self.library_intents
+        
+        # Load Knowledge Base for RAG
+        self.kb = self._load_knowledge_base('app/data/knowledge_base.json')
+        self.kb_embeddings = None  # Will be set later if sbert loads
+        
         # On Render, skip all heavy ML models to avoid timeouts
         if _IS_RENDER:
             print("[!] Render detected: Using lightweight keyword-based NLP only")
@@ -72,47 +102,13 @@ class HybridNLPEngine:
         except Exception as e:
             print(f"[!] NLP Engine initialization failed partially: {e}")
             # Continue with keyword-based fallback
-
-        # Intent examples for keyword matching (fallback)
-        self.intent_examples = {
-            'book_search': ['find', 'search', 'locate', 'book', 'textbook'],
-            'library_hours': ['hour', 'open', 'close', 'schedule', 'time'],
-            'book_availability': ['available', 'availability', 'in stock', 'on shelf'],
-            'book_renewal': ['renew', 'extension', 'prolong'],
-            'book_reservation': ['reserve', 'hold', 'booking'],
-            'borrowing_policy': ['policy', 'rule', 'limit', 'fine', 'how many', 'how long'],
-            'contact_info': ['contact', 'phone', 'email', 'call', 'address', 'department'],
-            'research_assistance': ['research', 'journal', 'article', 'database', 'citation', 'paper', 'literature'],
-            'study_rooms': ['study room', 'booking space', 'reserve room'],
-            'library_services': ['printing', 'scanning', 'workshop', 'service'],
-            'greeting': ['hello', 'hi', 'hey', 'greetings', 'morning', 'afternoon', 'evening'],
-            'farewell': ['bye', 'goodbye', 'thank', 'thanks'],
-            # Identity intents
-            'introduction': ['who are you', 'what are you', 'your name', 'introduce'],
-            'about_you': ['about yourself', 'tell me about', 'describe yourself', 'more about you'],
-            'bot_identity': ['who created', 'who creates', 'created you', 'create you', 'who designed', 'who made', 'identity'],
-            'bot_purpose': ['what do you do', 'your job', 'your function', 'how can you help'],
-            # Borrow and reservation status
-            'my_borrows': ['my borrow', 'my loan', 'borrowing status', 'check out status', 'my checkouts', 'borrowed books', 'what books do i have'],
-            'my_reservations': ['my reservation', 'my hold', 'reservation status', 'hold status', 'my holds', 'reserved books', 'what books do i have reserved'],
-            'borrow_request': ['want to borrow', 'borrow this book', 'check out', 'take home', 'request to borrow'],
-            'return': ['return', 'due date', 'when to return', 'return my book']
-        }
-
-        self.library_intents = self.intent_examples
-
-        # Also add library_keywords for the other method
-        # self.library_keywords = self.library_intents  # Use same dictionary
-
-        # Load trained models if they exist
-        # self.vectorizer = None
-        # self.intent_classifier = None
-
-        self.library_keywords = self.library_intents
-
-        # Load Knowledge Base for RAG
-        self.kb = self._load_knowledge_base('app/data/knowledge_base.json')
-        self.kb_embeddings = self._encode_kb() if self.kb and self.sbert_model else None
+        
+        # Try to encode KB if sbert loaded (only non-Render)
+        if not _IS_RENDER and self.kb and self.sbert_model:
+            try:
+                self.kb_embeddings = self._encode_kb()
+            except Exception as e:
+                print(f"[!] Could not encode KB: {e}")
 
     def _load_knowledge_base(self, path):
         import json
