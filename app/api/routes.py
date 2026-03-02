@@ -5,55 +5,29 @@ API routes for the Intelligent Library Chat Assistant
 from flask import Blueprint, request, jsonify, session, render_template
 from flask_login import login_required, current_user
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.models.dialogue_manager import DialogueManager
-from app.models.rule_engine import AdvancedRuleEngine
-from app.models.nlp_engine import HybridNLPEngine
-from app.models.response_generator import ResponseGenerator
-from app.utils.database import db
-from app.utils.metrics import MetricsTracker
-from app.chatbot import get_opac_client
 import time
 import uuid
 
-# Initialize components lazily
-rule_engine = None
-nlp_engine = None
-response_generator = None
-metrics_tracker = None
-dialogue_manager = None
+# Create Blueprint immediately
+api_bp = Blueprint('api', __name__)
 
-def get_rule_engine():
-    global rule_engine
-    if rule_engine is None:
-        rule_engine = AdvancedRuleEngine('app/data/rules.json')
-    return rule_engine
-
-def get_nlp_engine():
-    global nlp_engine
-    if nlp_engine is None:
-        nlp_engine = HybridNLPEngine()
-    return nlp_engine
-
-def get_response_generator():
-    global response_generator
-    if response_generator is None:
-        response_generator = ResponseGenerator('app/data/response_templates.json')
-    return response_generator
-
-def get_metrics_tracker():
-    global metrics_tracker
-    if metrics_tracker is None:
-        metrics_tracker = MetricsTracker()
-    return metrics_tracker
+# Lazy imports - all components loaded on first request
+_dialogue_manager = None
+_metrics_tracker = None
 
 def get_dialogue_manager():
-    global dialogue_manager
-    if dialogue_manager is None:
-        dialogue_manager = DialogueManager(get_rule_engine(), get_nlp_engine(), get_response_generator())
-    return dialogue_manager
+    global _dialogue_manager
+    if _dialogue_manager is None:
+        from app.chatbot import get_dialogue_manager as get_dm
+        _dialogue_manager = get_dm()
+    return _dialogue_manager
 
-# Create Blueprint
-api_bp = Blueprint('api', __name__)
+def get_metrics_tracker():
+    global _metrics_tracker
+    if _metrics_tracker is None:
+        from app.utils.metrics import MetricsTracker
+        _metrics_tracker = MetricsTracker()
+    return _metrics_tracker
 
 
 
