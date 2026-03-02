@@ -1,23 +1,37 @@
 import re
-
-import spacy
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sentence_transformers import SentenceTransformer
 from typing import Dict, List, Tuple, Any
-import joblib
 
+# Lazy imports - only load when needed
+_spacy = None
+_numpy = None
+_TfidfVectorizer = None
+_joblib = None
 
 class HybridNLPEngine:
     def __init__(self):
         print("[INIT] Initializing Hybrid NLP Engine...")
+        
+        # Lazy import heavy modules
+        global _spacy, _numpy, _TfidfVectorizer, _joblib
+        if _spacy is None:
+            import spacy as sp
+            _spacy = sp
+        if _numpy is None:
+            import numpy as np
+            _numpy = np
+        if _TfidfVectorizer is None:
+            from sklearn.feature_extraction.text import TfidfVectorizer as Tv
+            _TfidfVectorizer = Tv
+        if _joblib is None:
+            import joblib as jb
+            _joblib = jb
 
         # Load spaCy
         try:
-            self.spacy_nlp = spacy.load("en_core_web_sm")
+            self.spacy_nlp = _spacy.load("en_core_web_sm")
             print("[OK] spaCy model loaded")
         except:
-            print("[!] Could not load spaCy model, please run: python -m spacy download en_core_web_sm")
+            print("[!] Could not load spaCy model")
             self.spacy_nlp = None
 
         # Load trained models if they exist
@@ -25,13 +39,11 @@ class HybridNLPEngine:
         self.intent_classifier = None
 
         try:
-            self.vectorizer = joblib.load('app/models/tfidf_vectorizer.pkl')
-            self.intent_classifier = joblib.load('app/models/intent_classifier.pkl')
+            self.vectorizer = _joblib.load('app/models/tfidf_vectorizer.pkl')
+            self.intent_classifier = _joblib.load('app/models/intent_classifier.pkl')
             print("[OK] Trained models loaded")
         except FileNotFoundError:
-            print("[!] Trained model files not found")
-            print("[!] Please run: python train_models.py")
-            print("[!] Using keyword-based intent detection for now")
+            print("[!] Trained model files not found, using keyword-based detection")
 
         # Load SentenceTransformer if available
         try:
