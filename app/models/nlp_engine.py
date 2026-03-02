@@ -1,5 +1,9 @@
 import re
+import os
 from typing import Dict, List, Tuple, Any
+
+# Check if running on Render (resource-constrained environment)
+_IS_RENDER = os.environ.get('RENDER', '').lower() == 'true'
 
 # Lazy imports - only load when needed
 _spacy = None
@@ -10,53 +14,64 @@ _joblib = None
 class HybridNLPEngine:
     def __init__(self):
         print("[INIT] Initializing Hybrid NLP Engine...")
+        print(f"[INFO] Running on Render: {_IS_RENDER}")
         
-        # Lazy import heavy modules
-        global _spacy, _numpy, _TfidfVectorizer, _joblib
-        if _spacy is None:
-            import spacy as sp
-            _spacy = sp
-        if _numpy is None:
-            import numpy as np
-            _numpy = np
-        if _TfidfVectorizer is None:
-            from sklearn.feature_extraction.text import TfidfVectorizer as Tv
-            _TfidfVectorizer = Tv
-        if _joblib is None:
-            import joblib as jb
-            _joblib = jb
-
-        # Load spaCy
-        try:
-            self.spacy_nlp = _spacy.load("en_core_web_sm")
-            print("[OK] spaCy model loaded")
-        except Exception as e:
-            print(f"[!] Could not load spaCy model: {e}")
-            self.spacy_nlp = None
-
-        # Load trained models if they exist
+        # Initialize all to None first (safe defaults)
+        self.spacy_nlp = None
         self.vectorizer = None
         self.intent_classifier = None
-
+        self.sbert_model = None
+        
+        # On Render, skip all heavy ML models to avoid timeouts
+        if _IS_RENDER:
+            print("[!] Render detected: Using lightweight keyword-based NLP only")
+            return
+        
         try:
-            self.vectorizer = _joblib.load('app/models/tfidf_vectorizer.pkl')
-            self.intent_classifier = _joblib.load('app/models/intent_classifier.pkl')
-            print("[OK] Trained models loaded")
-        except FileNotFoundError:
-            print("[!] Trained model files not found, using keyword-based detection")
+            # Lazy import heavy modules (only on non-Render environments)
+            global _spacy, _numpy, _TfidfVectorizer, _joblib
+            if _spacy is None:
+                import spacy as sp
+                _spacy = sp
+            if _numpy is None:
+                import numpy as np
+                _numpy = np
+            if _TfidfVectorizer is None:
+                from sklearn.feature_extraction.text import TfidfVectorizer as Tv
+                _TfidfVectorizer = Tv
+            if _joblib is None:
+                import joblib as jb
+                _joblib = jb
 
-        # Load SentenceTransformer if available
-        try:
-            from sentence_transformers import SentenceTransformer
-            # Disable download progress bars and use cache
-            import os
-            os.environ['HF_HUB_DISABLE_PROGRESS_BARS'] = '1'
-            os.environ['TOKENIZERS_PARALLELISM'] = 'false'
-            self.sbert_model = SentenceTransformer('all-MiniLM-L6-v2')
-            print("[OK] SentenceTransformer loaded")
+            # Load spaCy (optional)
+            try:
+                self.spacy_nlp = _spacy.load("en_core_web_sm")
+                print("[OK] spaCy model loaded")
+            except Exception as e:
+                print(f"[!] Could not load spaCy model: {e}")
+
+            # Load trained models if they exist (optional)
+            try:
+                self.vectorizer = _joblib.load('app/models/tfidf_vectorizer.pkl')
+                self.intent_classifier = _joblib.load('app/models/intent_classifier.pkl')
+                print("[OK] Trained models loaded")
+            except FileNotFoundError:
+                print("[!] Trained model files not found, using keyword-based detection")
+            except Exception as e:
+                print(f"[!] Could not load trained models: {e}")
+
+            # Load SentenceTransformer if available
+            try:
+                from sentence_transformers import SentenceTransformer
+                os.environ['HF_HUB_DISABLE_PROGRESS_BARS'] = '1'
+                os.environ['TOKENIZERS_PARALLELISM'] = 'false'
+                self.sbert_model = SentenceTransformer('all-MiniLM-L6-v2')
+                print("[OK] SentenceTransformer loaded")
+            except Exception as e:
+                print(f"[!] SentenceTransformer not available: {e}")
         except Exception as e:
-            print(f"[!] SentenceTransformer not available: {e}")
-            self.sbert_model = None
+            print(f"[!] NLP Engine initialization failed partially: {e}")
+            # Continue with keyword-based fallback
 
         # Intent examples for keyword matching (fallback)
         self.intent_examples = {
