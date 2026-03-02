@@ -11,7 +11,23 @@ from flask_jwt_extended import (
 from app.extensions import db
 from app.model import ActivityLog, User, register_parser, user_schema, login_parser, UserSession, chat_parser, \
     feedback_parser, Feedback, activities_schema, search_parser, users_schema, activity_schema, Book, Contact, book_schema, books_schema, contact_schema, contacts_schema
-from app.chatbot import dialogue_manager, metrics_tracker, get_opac_client
+from app.chatbot import get_opac_client, get_dialogue_manager, get_metrics_tracker
+
+# Lazy loading wrappers
+_dialogue_manager = None
+_metrics_tracker = None
+
+def get_dm():
+    global _dialogue_manager
+    if _dialogue_manager is None:
+        _dialogue_manager = get_dialogue_manager()
+    return _dialogue_manager
+
+def get_mt():
+    global _metrics_tracker
+    if _metrics_tracker is None:
+        _metrics_tracker = get_metrics_tracker()
+    return _metrics_tracker
 
 
 def get_client_info():
@@ -195,7 +211,7 @@ class ChatResource(Resource):
         start_time = time.time()
 
         try:
-            result = dialogue_manager.process_message(
+            result = get_dm().process_message(
                 user_id=user_id,
                 session_id=session_id,
                 message=args['message']
@@ -229,7 +245,7 @@ class ChatResource(Resource):
                 'intent': result.get('intent', 'unknown')
             })
 
-        metrics_tracker.record_interaction(
+        get_mt().record_interaction(
             user_id=user_id,
             session_id=session_id,
             message=args['message'],
@@ -691,7 +707,7 @@ class AdminMetricsResource(Resource):
                 {'date': str(stat.date), 'chat_count': stat.chat_count}
                 for stat in chat_stats
             ],
-            'system_metrics': metrics_tracker.get_all_metrics(),
+            'system_metrics': get_mt().get_all_metrics(),
             'total_users': User.query.count(),
             'total_activities': ActivityLog.query.count()
         }
