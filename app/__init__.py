@@ -96,6 +96,20 @@ def create_app(config_class='config.DevelopmentConfig'):
     login_manager.init_app(app)
     jwt.init_app(app)
 
+    # Deferred database creation - runs on first request
+    _db_initialized = False
+    
+    @app.before_request
+    def init_db():
+        nonlocal _db_initialized
+        if not _db_initialized:
+            try:
+                db.create_all()
+                app.logger.info("Database tables created")
+                _db_initialized = True
+            except Exception as e:
+                app.logger.error(f"Database error: {e}")
+
     from .model import User
 
     @login_manager.user_loader
