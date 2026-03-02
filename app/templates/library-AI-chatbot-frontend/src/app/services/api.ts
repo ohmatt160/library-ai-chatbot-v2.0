@@ -33,7 +33,8 @@ import type {
   ReservationAnalytics,
 } from '../types';
 
-const BASE_URL = 'http://localhost:5000/api';
+// Use relative URL - works for both production and local dev (with proxy)
+const BASE_URL = '/api';
 
 // Create axios instance
 export const api = axios.create({
