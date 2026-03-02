@@ -583,20 +583,30 @@ class BookSearchResource(Resource):
             except Exception:
                 pass
 
-            # Search using OpenLibrary API (live data)
-            from app.chatbot import get_opac_client
-            opac_client = get_opac_client()
-            opac_results = opac_client.search(query, author, subject)
-            
-            # Also search local database
+            # Search local database first (always works)
             from app.utils.database import search_catalog
-            local_results = search_catalog(query=query, author=author, subject=subject, limit=limit)
+            try:
+                local_results = search_catalog(query=query, author=author, subject=subject, limit=limit)
+            except Exception as e:
+                print(f"[!] Local search error: {e}")
+                local_results = []
             
-            # Mark the source of each result
-            for result in opac_results:
-                result['source'] = 'openlibrary'
+            # Mark local results
             for result in local_results:
                 result['source'] = 'local'
+            
+            # Try OpenLibrary API (may fail on Render)
+            opac_results = []
+            try:
+                from app.chatbot import get_opac_client
+                opac_client = get_opac_client()
+                opac_results = opac_client.search(query, author, subject)
+                # Mark OpenLibrary results
+                for result in opac_results:
+                    result['source'] = 'openlibrary'
+            except Exception as e:
+                print(f"[!] OpenLibrary search failed: {e}")
+                opac_results = []
             
             # Combine results - OpenLibrary first, then local
             results = opac_results + local_results
@@ -605,7 +615,7 @@ class BookSearchResource(Resource):
                 'query': query,
                 'count': len(results),
                 'results': results[:limit],
-                'source': 'openlibrary+local'
+                'source': 'openlibrary+local' if opac_results else 'local'
             }
         except Exception as e:
             import traceback
