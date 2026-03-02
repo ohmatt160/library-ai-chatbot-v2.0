@@ -52,18 +52,17 @@ def _run_migrations(app):
 
 def create_app(config_class='config.DevelopmentConfig'):
     """Create and configure the Flask application"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info("[create_app] Step A: Creating Flask instance...")
     app = Flask(__name__,
-                static_folder='static',  # Point to your React build
+                static_folder='static',
                 template_folder='templates')
-
-    # ... your existing config ...
-
-    # 👇 THIS ROUTE GOES HERE (on app, not blueprint)
-
-
-
+    logger.info("[create_app] Step A: ✓ Flask instance created")
 
     # Load configuration
+    logger.info("[create_app] Step B: Loading config...")
     app.config.from_object(config_class)
 
     # Override from environment variable if set
@@ -90,13 +89,17 @@ def create_app(config_class='config.DevelopmentConfig'):
     app.config.setdefault('OPAC_USE_MOCK', False)
 
     # Initialize extensions with app
+    logger.info("[create_app] Step C: Initializing extensions...")
     db.init_app(app)
     bcrypt.init_app(app)
     ma.init_app(app)
     login_manager.init_app(app)
     jwt.init_app(app)
-
+    logger.info("[create_app] Step C: ✓ Extensions initialized")
+    
+    logger.info("[create_app] Step D: Importing models...")
     from .model import User
+    logger.info("[create_app] Step D: ✓ Models imported")
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -134,10 +137,13 @@ def create_app(config_class='config.DevelopmentConfig'):
         return send_from_directory(app.static_folder, 'index.html')
 
     # Register blueprints
+    logger.info("[create_app] Step E: Registering blueprints...")
     from app.api.routes import api_bp
     app.register_blueprint(api_bp, url_prefix='/api')
+    logger.info("[create_app] Step E: ✓ Blueprints registered")
 
     # Initialize API
+    logger.info("[create_app] Step F: Initializing API resources...")
     api = Api(app)
     from .api.resources import (
         GetSession, RegisterResource, LoginResource, LogoutResource,
@@ -175,12 +181,18 @@ def create_app(config_class='config.DevelopmentConfig'):
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
     # Register borrow blueprint
+    logger.info("[create_app] Step G: Registering borrow blueprint...")
     from .api.borrow_routes import borrow_bp
     app.register_blueprint(borrow_bp, url_prefix='/api')
+    logger.info("[create_app] Step G: ✓ Borrow blueprint registered")
 
     # Setup logger
+    logger.info("[create_app] Step H: Setting up logger...")
     from .utils.logger import setup_logger
     setup_logger(app)
+    logger.info("[create_app] Step H: ✓ Logger ready")
+
+    logger.info("[create_app] ✓✓✓ App creation complete! ✓✓✓")
 
     # Error handlers
     @app.errorhandler(404)
