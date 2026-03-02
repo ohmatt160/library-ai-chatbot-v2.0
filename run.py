@@ -41,6 +41,18 @@ def index():
 def health():
     return {"status": "healthy"}, 200
 
+@app.route('/init-db')
+def init_db():
+    """Initialize database tables - call once after deployment"""
+    try:
+        from app.extensions import db
+        with app.app_context():
+            db.create_all()
+        return {"status": "success", "message": "Database tables created"}, 200
+    except Exception as e:
+        logger.error(f"DB init error: {e}")
+        return {"status": "error", "message": str(e)}, 500
+
 logger.info("Flask app ready")
 
 if __name__ == '__main__':
