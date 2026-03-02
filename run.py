@@ -33,7 +33,15 @@ try:
 
     @app.route('/')
     def index():
-        return render_template('index.html')
+        try:
+            return render_template('index.html')
+        except Exception as e:
+            logger.error(f"Error serving index: {e}")
+            return {"status": "ok", "message": "Library Chatbot API is running"}, 200
+
+    @app.route('/health')
+    def health():
+        return {"status": "healthy", "timestamp": "ok"}, 200
 
     logger.info("✅ Flask app ready")
 

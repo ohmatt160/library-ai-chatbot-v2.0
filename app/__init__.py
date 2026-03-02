@@ -198,6 +198,21 @@ def create_app(config_class='config.DevelopmentConfig'):
 
     @app.errorhandler(500)
     def internal_error(error):
+        import logging
+        logging.error(f"Internal error: {error}")
         return jsonify({'error': 'Internal server error'}), 500
+
+    # Log all requests for debugging
+    @app.before_request
+    def log_request():
+        from flask import request
+        import logging
+        logging.info(f"Request: {request.method} {request.path}")
+
+    @app.after_request
+    def log_response(response):
+        import logging
+        logging.info(f"Response: {response.status_code}")
+        return response
 
     return app
